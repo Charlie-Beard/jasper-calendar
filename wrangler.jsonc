@@ -10,9 +10,7 @@
     {
       "binding": "DB",
       "database_name": "jasper-calendar",
-      // After running `npx wrangler d1 create jasper-calendar`, paste the
-      // database_id it prints here. Local dev works with the placeholder.
-      "database_id": "REPLACE_WITH_YOUR_DATABASE_ID",
+      "database_id": "f2ad066b-0f00-4842-a1a6-08b4116bacb1",
       "migrations_dir": "migrations"
     }
   ]
