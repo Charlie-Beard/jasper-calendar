@@ -3,11 +3,32 @@ import { api } from './api.js';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+// Family trips: tiles in these ranges get the green "away" look.
+const TRIPS = [
+  { from: '2026-08-21', to: '2026-08-28', label: 'Wales', emoji: '🐉' },
+];
+
+function tripFor(date) {
+  return TRIPS.find((t) => date >= t.from && date <= t.to) || null;
+}
+
+// The day after the holidays — no tasks, just the big moment.
+const SCHOOL_DAY = '2026-09-02';
+
+// Days Dad is off work: every weekend, plus one-off days.
+const DAD_OFF_EXTRA = ['2026-07-28', '2026-08-17'];
+
+function dadOff(date) {
+  const dow = parseDate(date).getUTCDay();
+  return dow === 0 || dow === 6 || DAD_OFF_EXTRA.includes(date);
+}
+
 const grid = document.getElementById('grid');
 const progressEl = document.getElementById('progress');
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
 const modalNote = document.getElementById('modal-note');
+const modalTrip = document.getElementById('modal-trip');
 const modalList = document.getElementById('modal-list');
 
 let cal = null; // { from, to, today, days: { date: { total, done, hasSpecial } } }
@@ -47,14 +68,21 @@ function tileStatus(date) {
 function renderTile(btn, date) {
   const d = parseDate(date);
   const dayNum = d.getUTCDate();
+  const trip = tripFor(date);
+  const dad = dadOff(date);
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
+  const badges = (trip ? `<span class="trip-badge">${trip.emoji}</span>` : '')
+    + (dad ? '<span class="dad-badge">👨‍👦</span>' : '');
+  const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
   btn.className = 'tile'
     + (date === cal.today ? ' today' : '')
     + (date < cal.today ? ' past' : '')
-    + (date > cal.today ? ' future' : '');
-  btn.innerHTML = `${monthLabel}<span class="day-num">${dayNum}</span>${todayLabel}${tileStatus(date)}`;
+    + (date > cal.today ? ' future' : '')
+    + (trip ? ' trip' : '')
+    + (dad ? ' dad' : '');
+  btn.innerHTML = `${monthLabel}${badges}<span class="day-num">${dayNum}</span>${tripLabel}${todayLabel}${tileStatus(date)}`;
 }
 
 function renderGrid() {
@@ -70,6 +98,32 @@ function renderGrid() {
     renderTile(btn, date);
     grid.appendChild(btn);
   }
+  grid.appendChild(renderSchoolTile());
+}
+
+function renderSchoolTile() {
+  const btn = document.createElement('button');
+  btn.className = 'tile school';
+  btn.dataset.date = SCHOOL_DAY;
+  btn.setAttribute('aria-label', 'Wednesday 2 September — back to school');
+  btn.innerHTML = '<span class="day-num">2</span>'
+    + '<span class="school-emoji">🎒</span>'
+    + '<span class="school-label">School</span>';
+  btn.addEventListener('click', openSchoolDay);
+  return btn;
+}
+
+function openSchoolDay() {
+  openDate = SCHOOL_DAY;
+  modalTitle.textContent = friendlyDate(SCHOOL_DAY);
+  modalNote.classList.add('hidden');
+  modalTrip.classList.add('hidden');
+  modalList.innerHTML = '<li class="school-scene">'
+    + '<span class="scene-big">🏫</span>'
+    + '<span class="scene-row">🎒 📚 ✏️</span>'
+    + '<span class="scene-text">Back to school!</span>'
+    + '</li>';
+  modal.classList.remove('hidden');
 }
 
 function renderProgress() {
@@ -108,6 +162,12 @@ async function openDay(date) {
   modalTitle.textContent = friendlyDate(date);
   modalList.innerHTML = '<li class="loading">Loading…</li>';
   modalNote.classList.add('hidden');
+  const trip = tripFor(date);
+  const dad = !trip && dadOff(date);
+  modalTrip.textContent = trip ? `${trip.emoji} We're on holiday in ${trip.label}!`
+    : dad ? "👨‍👦 Daddy's off work today!" : '';
+  modalTrip.classList.toggle('dad-note', dad);
+  modalTrip.classList.toggle('hidden', !trip && !dad);
   modal.classList.remove('hidden');
 
   const day = await api.get(`/api/day/${date}`).catch(() => null);
@@ -132,7 +192,8 @@ async function openDay(date) {
 
 function renderItem(date, item, locked) {
   const li = document.createElement('li');
-  li.className = 'check-row' + (item.done ? ' done' : '') + (item.type === 'day' ? ' special-item' : '');
+  li.className = 'check-row' + (item.done ? ' done' : '') + (item.type === 'day' ? ' special-item' : '')
+    + (locked ? ' locked' : '');
   const label = document.createElement('label');
   const box = document.createElement('input');
   box.type = 'checkbox';

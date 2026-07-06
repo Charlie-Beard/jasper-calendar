@@ -1,5 +1,5 @@
 // Bump the version whenever shell files change so clients pick up the update.
-const CACHE = 'jasper-v1';
+const CACHE = 'jasper-v8';
 
 const SHELL = [
   '/',
