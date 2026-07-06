@@ -1,0 +1,19 @@
+{
+  "name": "jasper-calendar",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jasper-calendar",
+      // After running `npx wrangler d1 create jasper-calendar`, paste the
+      // database_id it prints here. Local dev works with the placeholder.
+      "database_id": "REPLACE_WITH_YOUR_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

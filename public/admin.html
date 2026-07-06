@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Jasper's Summer Holidays</title>
+  <meta name="theme-color" content="#4fb6e8">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="admin">
+  <header class="app-header">
+    <h1>Parent Admin 🛠️</h1>
+    <p class="progress-line"><a href="/">← Back to Jasper's calendar</a></p>
+  </header>
+
+  <main>
+    <section id="login-section" class="panel hidden">
+      <h2>Sign in</h2>
+      <form id="login-form" class="add-form">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="submit" class="btn primary">Sign in</button>
+      </form>
+      <p id="login-error" class="error hidden"></p>
+    </section>
+
+    <div id="portal" class="hidden">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Daily routine</h2>
+          <p class="hint">These happen every day, in this order.</p>
+        </div>
+        <ul id="defaults-list" class="admin-list"></ul>
+        <form id="defaults-add" class="add-form">
+          <input type="text" placeholder="New routine item…" required>
+          <button type="submit" class="btn primary">Add</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Special days</h2>
+          <p class="hint">Pick a day to add extra activities — they show up with a 🎉.</p>
+        </div>
+        <input id="special-date" type="date" class="date-picker">
+        <ul id="special-list" class="admin-list"></ul>
+        <form id="special-add" class="add-form">
+          <input type="text" placeholder="e.g. Trip to the zoo…" required>
+          <button type="submit" class="btn primary">Add</button>
+        </form>
+      </section>
+
+      <p class="logout-row"><button id="logout" class="btn">Sign out</button></p>
+    </div>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

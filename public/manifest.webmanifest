@@ -1,0 +1,13 @@
+{
+  "name": "Jasper's Summer Holidays",
+  "short_name": "Jasper's Summer",
+  "description": "Jasper's holiday calendar and daily plan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#bfe8ff",
+  "theme_color": "#4fb6e8",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

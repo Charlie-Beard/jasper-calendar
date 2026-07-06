@@ -88,7 +88,7 @@ Validate `:date` everywhere as `YYYY-MM-DD` within the holiday range. Any non-`/
 ## Kid calendar view (`index.html`)
 
 - Header: **"Jasper's Summer Holidays"** plus a fun progress line (e.g. "12 days done ⭐").
-- CSS Grid, **7 columns, Monday–Sunday** (UK convention) with a weekday header row. The range runs 23 Jul 2026 (**Wednesday**) to 1 Sep 2026 (**Tuesday**); render leading/trailing cells outside the range as empty so weekday alignment is correct.
+- CSS Grid, **7 columns, Monday–Sunday** (UK convention) with a weekday header row. The range runs 23 Jul 2026 (**Thursday**) to 1 Sep 2026 (**Tuesday**); render leading/trailing cells outside the range as empty so weekday alignment is correct.
 - Each tile shows the day number (add the short month name on the 1st of a month). **Today gets a bold highlight ring and a "Today" label.** Past days show a ⭐ when everything was checked off, otherwise a small progress dot (e.g. "3/11"). Days with parent-added extras show a badge (e.g. 🎉) so Jasper can spot special days.
 - Tap any tile → modal: date heading, ordered checklist with large touch-friendly checkboxes (≥44px targets), a satisfying check animation, and tap-anywhere-on-row to toggle. **Future days: the list is fully visible but checkboxes are disabled**, with a friendly note like "You can tick these when the day arrives!". Mirror the server rule client-side using the `today` value from the API, but rely on the server 403 as the real enforcement.
 - Design: bright and kid-friendly — large rounded tiles, big type, system font stack (no external fonts, so it works offline), plenty of colour. Must work in both portrait and landscape on iPad.
@@ -112,7 +112,7 @@ Validate `:date` everywhere as `YYYY-MM-DD` within the holiday range. Any non-`/
 ## Verification (for the implementer)
 
 - Run locally with `npx wrangler dev` (local D1; apply migrations with `migrate:local` first) and exercise the real flows:
-  - Calendar renders with correct weekday alignment: 23 Jul 2026 lands on Wednesday, 1 Sep 2026 on Tuesday.
+  - Calendar renders with correct weekday alignment: 23 Jul 2026 lands on Thursday, 1 Sep 2026 on Tuesday.
   - Today's tile is highlighted; tapping it opens the checklist; toggling an item persists across a reload.
   - Toggling an item on a **future** date is rejected server-side — prove it with a direct `curl` POST, not just the disabled UI.
   - Admin login with a wrong password is rejected; with the right password the routine can be added/edited/reordered/deleted.

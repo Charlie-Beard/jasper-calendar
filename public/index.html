@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jasper's Summer Holidays</title>
+  <meta name="theme-color" content="#4fb6e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Jasper's Summer">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Jasper's Summer Holidays ☀️</h1>
+    <p id="progress" class="progress-line"></p>
+  </header>
+
+  <main>
+    <div class="weekdays" aria-hidden="true">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+      <span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div id="grid" class="grid" role="grid" aria-label="Holiday calendar"></div>
+  </main>
+
+  <div id="modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title"></h2>
+        <button id="modal-close" class="close-btn" aria-label="Close">✕</button>
+      </div>
+      <p id="modal-note" class="modal-note hidden"></p>
+      <ul id="modal-list" class="checklist"></ul>
+    </div>
+  </div>
+
+  <script type="module" src="/js/calendar.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Copy to .dev.vars for local development (`npm run dev`).
+# In production these are set with `npx wrangler secret put <NAME>`.
+ADMIN_PASSWORD=change-me
+AUTH_SECRET=any-long-random-string
+# Optional, local dev only: pretend today is a different date (YYYY-MM-DD)
+# to preview the holiday calendar mid-summer. Never set in production.
+# TEST_TODAY=2026-08-05
