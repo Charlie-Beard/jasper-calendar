@@ -17,8 +17,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(180deg, var(--sky) 0%, #eaf7ff 60%, #fff8e7 100%);
   min-height: 100vh;
+  min-height: 100dvh; /* iOS Safari: track the real viewport as the toolbar collapses */
   color: var(--ink);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow-x: clip;
+}
+
+button, label, a {
+  touch-action: manipulation; /* no 350ms double-tap-to-zoom delay on iOS */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app-header {
@@ -48,7 +55,9 @@ main {
 
 .weekdays, .grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* minmax(0, …): never let a long label ("Wednesday") force the row wider
+     than the screen — that's what made iPhones need to pinch out */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -58,6 +67,16 @@ main {
   color: var(--ink-soft);
   font-size: clamp(0.8rem, 2.3vw, 1.25rem);
   padding: 6px 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.weekdays b { font-weight: inherit; }
+.wd-short { display: none; }
+
+@media (max-width: 640px) {
+  .wd-full { display: none; }
+  .wd-short { display: inline; }
 }
 
 .grid { margin-top: 4px; }
@@ -227,6 +246,31 @@ main {
   color: #1470a4;
 }
 
+/* Phones: tighten spacing so 7 columns of tiles stay comfortably tappable */
+@media (max-width: 480px) {
+  .app-header { padding: 14px 12px 6px; }
+
+  main { padding: 4px 8px 24px; }
+
+  .weekdays, .grid { gap: 5px; }
+
+  .tile {
+    border-radius: 12px;
+    box-shadow: 0 2px 0 rgba(30, 58, 82, 0.12);
+  }
+
+  .tile.today { outline-width: 3px; }
+
+  .trip-badge { top: 2px; left: 3px; }
+  .dad-badge, .tile .special { top: 2px; right: 3px; }
+  .tile.dad .special { right: calc(3px + 1.3em); }
+
+  .today-label, .trip-label, .school-label {
+    padding: 1px 5px;
+    letter-spacing: 0;
+  }
+}
+
 /* --- Day modal --- */
 
 .hidden { display: none !important; }
@@ -247,9 +291,24 @@ main {
   border-radius: 24px;
   width: min(480px, 100%);
   max-height: 85vh;
+  max-height: 85dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 20px;
   box-shadow: 0 12px 40px rgba(30, 58, 82, 0.35);
+}
+
+/* Phones: the day card becomes a bottom sheet — easier thumb reach,
+   and it can't collide with the iOS home indicator */
+@media (max-width: 640px) {
+  .modal-overlay { align-items: flex-end; padding: 0; }
+
+  .modal-card {
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
 }
 
 .modal-head {
@@ -380,8 +439,9 @@ main {
 
 .add-form input, .date-picker {
   flex: 1;
+  min-width: 0; /* let the input shrink instead of overflowing narrow phones */
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 1rem; /* 16px+ stops iOS Safari auto-zooming into focused fields */
   padding: 10px 12px;
   border: 2px solid #d7e6f1;
   border-radius: 10px;

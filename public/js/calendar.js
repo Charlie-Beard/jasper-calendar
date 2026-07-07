@@ -74,7 +74,7 @@ function renderTile(btn, date) {
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
   const badges = (trip ? `<span class="trip-badge">${trip.emoji}</span>` : '')
-    + (dad ? '<span class="dad-badge">👨‍👦</span>' : '');
+    + (dad ? '<span class="dad-badge">👨</span>' : '');
   const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
   btn.className = 'tile'
     + (date === cal.today ? ' today' : '')
@@ -165,7 +165,7 @@ async function openDay(date) {
   const trip = tripFor(date);
   const dad = !trip && dadOff(date);
   modalTrip.textContent = trip ? `${trip.emoji} We're on holiday in ${trip.label}!`
-    : dad ? "👨‍👦 Daddy's off work today!" : '';
+    : dad ? "👨 Daddy's off work today!" : '';
   modalTrip.classList.toggle('dad-note', dad);
   modalTrip.classList.toggle('hidden', !trip && !dad);
   modal.classList.remove('hidden');
