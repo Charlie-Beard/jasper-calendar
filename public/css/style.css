@@ -45,6 +45,17 @@ button, label, a {
   color: var(--ink-soft);
 }
 
+.offline-pill {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7a5a12;
+  background: #fff2d6;
+  border-radius: 99px;
+  padding: 4px 12px;
+}
+
 main {
   max-width: 900px;
   margin: 0 auto;

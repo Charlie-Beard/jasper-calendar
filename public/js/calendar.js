@@ -1,4 +1,5 @@
 import { api } from './api.js';
+import { outbox } from './outbox.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -25,6 +26,7 @@ function dadOff(date) {
 
 const grid = document.getElementById('grid');
 const progressEl = document.getElementById('progress');
+const offlinePill = document.getElementById('offline-pill');
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
 const modalNote = document.getElementById('modal-note');
@@ -33,6 +35,12 @@ const modalList = document.getElementById('modal-list');
 
 let cal = null; // { from, to, today, days: { date: { total, done, hasSpecial } } }
 let openDate = null;
+let fetchedOn = null; // iPad-clock date when `cal` was fetched, for midnight rollover
+
+// Same formula the server uses for "today" (worker.js todayISO).
+function londonToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+}
 
 function parseDate(iso) {
   return new Date(`${iso}T12:00:00Z`);
@@ -181,6 +189,15 @@ async function openDay(date) {
     modalNote.textContent = 'You can tick these off when the day arrives!';
     modalNote.classList.remove('hidden');
   }
+  // Offline: the day may come from the service worker cache — lay any
+  // still-unsent ticks on top, and recount so the tile matches the list.
+  for (const item of day.items) {
+    const pending = outbox.find(date, item.type, item.id);
+    if (pending) item.done = pending.done;
+  }
+  cal.days[date].total = day.items.length;
+  cal.days[date].done = day.items.filter((i) => i.done).length;
+  refreshTile(date);
   modalList.innerHTML = '';
   for (const item of day.items) {
     modalList.appendChild(renderItem(date, item, locked));
@@ -214,8 +231,17 @@ function renderItem(date, item, locked) {
       cal.days[date].done += done ? 1 : -1;
       refreshTile(date);
     } catch (e) {
-      box.checked = !done; // server said no — put it back
-      alert(e.message);
+      if (e.status === undefined) {
+        // No internet — keep the tick and send it once we're back online
+        outbox.add({ date, type: item.type, id: item.id, done });
+        li.classList.toggle('done', done);
+        cal.days[date].done += done ? 1 : -1;
+        refreshTile(date);
+        updateOfflinePill();
+      } else {
+        box.checked = !done; // server said no — put it back
+        alert(e.message);
+      }
     } finally {
       box.disabled = locked;
     }
@@ -236,20 +262,102 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
 
-// --- Boot ---
+// --- Offline sync + boot ---
 
-async function load() {
-  try {
-    cal = await api.get('/api/calendar');
-  } catch {
-    progressEl.textContent = 'Couldn\'t load the calendar — check the internet and refresh!';
-    return;
-  }
-  renderGrid();
-  renderProgress();
+function updateOfflinePill() {
+  const offline = !navigator.onLine;
+  const pending = outbox.size() > 0;
+  offlinePill.textContent = offline
+    ? '📴 No internet — your ticks are saved!'
+    : '☁️ Sending your ticks…';
+  offlinePill.classList.toggle('hidden', !offline && !pending);
 }
 
-load();
+// Tile counts come from the server (or its cached copy); nudge them by any
+// ticks that haven't reached the server yet so the grid matches reality.
+function applyPendingToCounts() {
+  for (const e of outbox.all()) {
+    const day = cal.days[e.date];
+    if (!day) continue;
+    day.done = Math.min(day.total, Math.max(0, day.done + (e.done ? 1 : -1)));
+  }
+}
+
+// Warm the service worker cache with every remaining day's checklist so the
+// modal still opens when the iPad has no internet (e.g. away in Wales).
+let prefetched = false;
+async function prefetchDays() {
+  if (prefetched || !navigator.onLine) return;
+  prefetched = true;
+  const start = cal.today > cal.from ? cal.today : cal.from;
+  if (start > cal.to) return;
+  for (const date of dateRange(start, cal.to)) {
+    try {
+      await api.get(`/api/day/${date}`); // sequential — a gentle background trickle
+    } catch {
+      prefetched = false; // connection dropped mid-way; retry on next load
+      return;
+    }
+  }
+}
+
+async function load() {
+  let fresh;
+  try {
+    fresh = await api.get('/api/calendar');
+  } catch {
+    if (!cal) {
+      progressEl.textContent = 'Couldn\'t load the calendar — check the internet and refresh!';
+      return;
+    }
+    // Can't reach the server or its cache, but we already have data:
+    // roll "today" forward from the iPad's clock until we can re-ask.
+    fresh = { ...cal, today: londonToday() };
+  }
+  cal = fresh;
+  // Offline overnight: the cached response still says yesterday.
+  if (!navigator.onLine && cal.today < londonToday()) cal.today = londonToday();
+  fetchedOn = londonToday();
+  applyPendingToCounts();
+  renderGrid();
+  renderProgress();
+  updateOfflinePill();
+  prefetchDays();
+}
+
+// Push pending ticks to the server; once they all land, re-fetch so the
+// grid shows the server's truth instead of our local guesses.
+let syncing = false;
+async function sync() {
+  updateOfflinePill();
+  if (syncing || outbox.size() === 0) return;
+  syncing = true;
+  try {
+    if (await outbox.flush(api)) await load();
+  } finally {
+    syncing = false;
+    updateOfflinePill();
+  }
+}
+
+// The iPad keeps the app open for days — re-fetch after midnight so the
+// "Today" ring moves and the new day unlocks without a manual refresh.
+async function refreshIfStale() {
+  if (cal && fetchedOn !== londonToday()) {
+    await load();
+    sync();
+  }
+}
+
+window.addEventListener('online', sync);
+window.addEventListener('offline', updateOfflinePill);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshIfStale();
+});
+window.addEventListener('pageshow', refreshIfStale);
+setInterval(refreshIfStale, 60000);
+
+load().then(sync);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');

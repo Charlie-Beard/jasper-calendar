@@ -1,11 +1,12 @@
 // Bump the version whenever shell files change so clients pick up the update.
-const CACHE = 'jasper-v9';
+const CACHE = 'jasper-v10';
 
 const SHELL = [
   '/',
   '/css/style.css',
   '/js/api.js',
   '/js/calendar.js',
+  '/js/outbox.js',
   '/manifest.webmanifest',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
