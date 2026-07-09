@@ -17,7 +17,7 @@ function tripFor(date) {
 const SCHOOL_DAY = '2026-09-02';
 
 // Days Grandma and Grandpa take Jasper — add dates here as they get booked.
-const GRANDPARENT_DAYS = ['2026-08-01'];
+const GRANDPARENT_DAYS = ['2026-07-24', '2026-08-01', '2026-08-06', '2026-08-14', '2026-08-20'];
 
 function grandparentDay(date) {
   return GRANDPARENT_DAYS.includes(date);
