@@ -197,6 +197,19 @@ main {
   text-transform: uppercase;
 }
 
+/* Grandma & Grandpa days — GRANDPARENT_DAYS in calendar.js */
+.tile.gran {
+  background: linear-gradient(180deg, #fdeef4 0%, #fad7e6 100%);
+  box-shadow: 0 3px 0 rgba(196, 74, 130, 0.28);
+}
+
+.gran-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
 /* Dad's days off — weekends plus DAD_OFF_EXTRA in calendar.js */
 .tile.dad {
   background: linear-gradient(180deg, #eef0ff 0%, #dde2ff 100%);
@@ -272,7 +285,7 @@ main {
 
   .tile.today { outline-width: 3px; }
 
-  .trip-badge { top: 2px; left: 3px; }
+  .trip-badge, .gran-badge { top: 2px; left: 3px; }
   .dad-badge, .tile .special { top: 2px; right: 3px; }
   .tile.dad .special { right: calc(3px + 1.3em); }
 
@@ -354,6 +367,7 @@ main {
 }
 
 .trip-note { background: #e2f7ec; color: #1f7a4d; }
+.trip-note.gran-note { background: #fdeef4; color: #a13a6c; }
 .trip-note.dad-note { background: #eef0ff; color: #3f4b9e; }
 
 .checklist { list-style: none; }

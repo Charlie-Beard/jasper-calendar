@@ -16,6 +16,13 @@ function tripFor(date) {
 // The day after the holidays — no tasks, just the big moment.
 const SCHOOL_DAY = '2026-09-02';
 
+// Days Grandma and Grandpa take Jasper — add dates here as they get booked.
+const GRANDPARENT_DAYS = ['2026-08-01'];
+
+function grandparentDay(date) {
+  return GRANDPARENT_DAYS.includes(date);
+}
+
 // Days Dad is off work: every weekend, plus one-off days.
 const DAD_OFF_EXTRA = ['2026-07-28', '2026-08-17'];
 
@@ -77,11 +84,13 @@ function renderTile(btn, date) {
   const d = parseDate(date);
   const dayNum = d.getUTCDate();
   const trip = tripFor(date);
-  const dad = dadOff(date);
+  const gran = grandparentDay(date);
+  const dad = !gran && dadOff(date); // Grandma & Grandpa's day takes over the tile
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
   const badges = (trip ? `<span class="trip-badge">${trip.emoji}</span>` : '')
+    + (gran ? '<span class="gran-badge">👵👴</span>' : '')
     + (dad ? '<span class="dad-badge">👨</span>' : '');
   const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
   btn.className = 'tile'
@@ -89,6 +98,7 @@ function renderTile(btn, date) {
     + (date < cal.today ? ' past' : '')
     + (date > cal.today ? ' future' : '')
     + (trip ? ' trip' : '')
+    + (gran ? ' gran' : '')
     + (dad ? ' dad' : '');
   btn.innerHTML = `${monthLabel}${badges}<span class="day-num">${dayNum}</span>${tripLabel}${todayLabel}${tileStatus(date)}`;
 }
@@ -171,11 +181,14 @@ async function openDay(date) {
   modalList.innerHTML = '<li class="loading">Loading…</li>';
   modalNote.classList.add('hidden');
   const trip = tripFor(date);
-  const dad = !trip && dadOff(date);
+  const gran = !trip && grandparentDay(date);
+  const dad = !trip && !gran && dadOff(date);
   modalTrip.textContent = trip ? `${trip.emoji} We're on holiday in ${trip.label}!`
+    : gran ? "👵👴 You're with Grandma and Grandpa today!"
     : dad ? "👨 Daddy's off work today!" : '';
+  modalTrip.classList.toggle('gran-note', gran);
   modalTrip.classList.toggle('dad-note', dad);
-  modalTrip.classList.toggle('hidden', !trip && !dad);
+  modalTrip.classList.toggle('hidden', !trip && !gran && !dad);
   modal.classList.remove('hidden');
 
   const day = await api.get(`/api/day/${date}`).catch(() => null);
