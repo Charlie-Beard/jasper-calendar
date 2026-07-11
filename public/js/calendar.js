@@ -31,6 +31,22 @@ function dadOff(date) {
   return dow === 0 || dow === 6 || DAD_OFF_EXTRA.includes(date);
 }
 
+// Tuesdays: cleaners are here (except for these dates)
+const CLEANER_SKIP = ['2026-08-25']; // Holiday weeks
+
+function cleanerDay(date) {
+  if (CLEANER_SKIP.includes(date)) return false;
+  const dow = parseDate(date).getUTCDay();
+  return dow === 2; // Tuesday
+}
+
+// Days at Oma's (grandma's house) — add dates here as they get booked.
+const OMA_DAYS = ['2026-08-04'];
+
+function omaDay(date) {
+  return OMA_DAYS.includes(date);
+}
+
 const grid = document.getElementById('grid');
 const progressEl = document.getElementById('progress');
 const offlinePill = document.getElementById('offline-pill');
@@ -85,13 +101,17 @@ function renderTile(btn, date) {
   const dayNum = d.getUTCDate();
   const trip = tripFor(date);
   const gran = grandparentDay(date);
-  const dad = !gran && dadOff(date); // Grandma & Grandpa's day takes over the tile
+  const oma = omaDay(date);
+  const dad = !gran && !oma && dadOff(date); // Grandma/Oma days take over the tile
+  const cleaner = cleanerDay(date);
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
   const badges = (trip ? `<span class="trip-badge">${trip.emoji}</span>` : '')
     + (gran ? '<span class="gran-badge">👵👴</span>' : '')
-    + (dad ? '<span class="dad-badge">👨</span>' : '');
+    + (oma ? '<span class="oma-badge">👩</span>' : '')
+    + (dad ? '<span class="dad-badge">👨</span>' : '')
+    + (cleaner ? '<span class="cleaner-badge">🧹</span>' : '');
   const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
   btn.className = 'tile'
     + (date === cal.today ? ' today' : '')
@@ -99,7 +119,9 @@ function renderTile(btn, date) {
     + (date > cal.today ? ' future' : '')
     + (trip ? ' trip' : '')
     + (gran ? ' gran' : '')
-    + (dad ? ' dad' : '');
+    + (oma ? ' oma' : '')
+    + (dad ? ' dad' : '')
+    + (cleaner ? ' cleaner' : '');
   btn.innerHTML = `${monthLabel}${badges}<span class="day-num">${dayNum}</span>${tripLabel}${todayLabel}${tileStatus(date)}`;
 }
 

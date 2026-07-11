@@ -232,6 +232,44 @@ main {
 /* Make room: the 🎉 badge shares the top-right corner on dad days */
 .tile.dad .special { right: calc(6px + 1.6em); }
 
+/* Tuesday cleaner days — cleanerDay() in calendar.js */
+.tile.cleaner {
+  background: linear-gradient(180deg, #ffe8d6 0%, #ffd9bf 100%);
+  box-shadow: 0 3px 0 rgba(255, 140, 66, 0.28);
+}
+
+.cleaner-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
+/* Oma's house days — OMA_DAYS in calendar.js */
+.tile.oma {
+  background: linear-gradient(180deg, #d4b8e6 0%, #bf9fdd 100%);
+  box-shadow: 0 3px 0 rgba(168, 80, 200, 0.32);
+}
+
+.oma-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
+/* Oma + cleaner together — purple blending into orange */
+.tile.oma.cleaner {
+  background: linear-gradient(135deg, #d4b8e6 0%, #bf9fdd 40%, #ffd9bf 100%);
+  box-shadow: 0 3px 0 rgba(180, 60, 200, 0.32);
+}
+
+/* Position cleaner badge on right when with oma (to avoid overlap) */
+.tile.oma.cleaner .cleaner-badge {
+  right: 6px;
+  left: auto;
+}
+
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
   background: linear-gradient(180deg, #e3f4ff 0%, #c9e9ff 100%);
@@ -285,9 +323,10 @@ main {
 
   .tile.today { outline-width: 3px; }
 
-  .trip-badge, .gran-badge { top: 2px; left: 3px; }
+  .trip-badge, .gran-badge, .oma-badge, .cleaner-badge { top: 2px; left: 3px; }
   .dad-badge, .tile .special { top: 2px; right: 3px; }
   .tile.dad .special { right: calc(3px + 1.3em); }
+  .tile.oma.cleaner .cleaner-badge { right: 3px; left: auto; }
 
   .today-label, .trip-label, .school-label {
     padding: 1px 5px;
