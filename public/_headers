@@ -1,0 +1,6 @@
+# Served by Cloudflare Workers static assets on every asset response.
+# The app is fully self-contained: same-origin scripts, styles and fetches only.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'

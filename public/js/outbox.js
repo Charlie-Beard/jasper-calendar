@@ -35,15 +35,16 @@ export const outbox = {
     return Object.keys(read()).length;
   },
 
-  // Replay pending ticks in order. An answer from the server (ok or a
-  // refusal like 403/404) settles an entry; a network failure keeps the
-  // rest for next time. Returns true once the outbox is empty.
+  // Replay pending ticks in order. Success or a deliberate refusal (4xx,
+  // like 403/404) settles an entry; a network failure or a server error
+  // (5xx) keeps everything for next time — never drop a tick because the
+  // server hiccuped. Returns true once the outbox is empty.
   async flush(api) {
     for (const e of this.all()) {
       try {
         await api.post(`/api/day/${e.date}/toggle`, { type: e.type, id: e.id, done: e.done });
       } catch (err) {
-        if (err.status === undefined) return false; // still offline
+        if (!(err.status >= 400 && err.status < 500)) return false; // offline or 5xx — retry later
       }
       const map = read();
       delete map[`${e.date}:${e.type}:${e.id}`];

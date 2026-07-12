@@ -8,9 +8,12 @@
     "deploy": "wrangler deploy",
     "migrate:local": "wrangler d1 migrations apply jasper-calendar --local",
     "migrate:remote": "wrangler d1 migrations apply jasper-calendar --remote",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.18.4",
+    "vitest": "^4.1.10",
     "wrangler": "^4.0.0"
   }
 }

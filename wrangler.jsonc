@@ -2,6 +2,11 @@
   "name": "jasper-calendar",
   "main": "src/worker.js",
   "compatibility_date": "2026-06-01",
+  // Runs before dev/deploy (including Cloudflare Workers Builds): stamps
+  // public/version.json with the git SHA + build time for the page footer.
+  "build": {
+    "command": "node scripts/generate-version.mjs"
+  },
   "assets": {
     "directory": "public",
     "binding": "ASSETS"

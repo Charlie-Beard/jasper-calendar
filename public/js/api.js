@@ -18,11 +18,20 @@ async function request(method, path, body) {
   if (path.startsWith('/api/admin/') && !path.endsWith('/login')) {
     headers['Authorization'] = `Bearer ${getToken()}`;
   }
-  const res = await fetch(path, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // fetch itself failed — no connection (or the request never left the
+    // device). Flagged explicitly so callers don't have to infer it.
+    const err = new Error('No connection');
+    err.network = true;
+    throw err;
+  }
   let data = null;
   try {
     data = await res.json();

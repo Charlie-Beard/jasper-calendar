@@ -4,47 +4,23 @@ import { outbox } from './outbox.js';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// Family trips: tiles in these ranges get the green "away" look.
-const TRIPS = [
-  { from: '2026-08-21', to: '2026-08-28', label: 'Wales', emoji: '🐉' },
-];
+// The family schedule (trips, grandparent days, …) lives in src/schedule.js
+// on the server and arrives inside /api/calendar as `cal.schedule` — so
+// schedule edits don't need a client redeploy to reach the iPad.
 
-function tripFor(date) {
-  return TRIPS.find((t) => date >= t.from && date <= t.to) || null;
-}
-
-// The day after the holidays — no tasks, just the big moment.
-const SCHOOL_DAY = '2026-09-02';
-
-// Days Grandma and Grandpa take Jasper — add dates here as they get booked.
-const GRANDPARENT_DAYS = ['2026-07-24', '2026-08-01', '2026-08-06', '2026-08-14', '2026-08-20'];
-
-function grandparentDay(date) {
-  return GRANDPARENT_DAYS.includes(date);
-}
-
-// Days Dad is off work: every weekend, plus one-off days.
-const DAD_OFF_EXTRA = ['2026-07-28', '2026-08-17'];
-
-function dadOff(date) {
+// The one place a date resolves to its day types — the tile and the modal
+// both use this, so they can never disagree. Priority: Grandma/Oma days
+// take the tile over from Dad; the cleaner is additive.
+function dayInfo(date) {
+  const s = cal.schedule;
   const dow = parseDate(date).getUTCDay();
-  return dow === 0 || dow === 6 || DAD_OFF_EXTRA.includes(date);
-}
-
-// Tuesdays: cleaners are here (except for these dates)
-const CLEANER_SKIP = ['2026-08-25']; // Holiday weeks
-
-function cleanerDay(date) {
-  if (CLEANER_SKIP.includes(date)) return false;
-  const dow = parseDate(date).getUTCDay();
-  return dow === 2; // Tuesday
-}
-
-// Days at Oma's (grandma's house) — add dates here as they get booked.
-const OMA_DAYS = ['2026-08-04'];
-
-function omaDay(date) {
-  return OMA_DAYS.includes(date);
+  const trip = s.trips.find((t) => date >= t.from && date <= t.to) || null;
+  const gran = s.grandparentDays.includes(date);
+  const oma = s.omaDays.includes(date);
+  const dad = !gran && !oma
+    && (dow === 0 || dow === 6 || s.dadOffExtra.includes(date));
+  const cleaner = dow === 2 && !s.cleanerSkip.includes(date);
+  return { trip, gran, oma, dad, cleaner };
 }
 
 const grid = document.getElementById('grid');
@@ -99,11 +75,7 @@ function tileStatus(date) {
 function renderTile(btn, date) {
   const d = parseDate(date);
   const dayNum = d.getUTCDate();
-  const trip = tripFor(date);
-  const gran = grandparentDay(date);
-  const oma = omaDay(date);
-  const dad = !gran && !oma && dadOff(date); // Grandma/Oma days take over the tile
-  const cleaner = cleanerDay(date);
+  const { trip, gran, oma, dad, cleaner } = dayInfo(date);
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
@@ -134,6 +106,7 @@ function renderGrid() {
   for (const date of dateRange(cal.from, cal.to)) {
     const btn = document.createElement('button');
     btn.dataset.date = date;
+    btn.setAttribute('aria-label', friendlyDate(date));
     btn.addEventListener('click', () => openDay(date));
     renderTile(btn, date);
     grid.appendChild(btn);
@@ -142,11 +115,12 @@ function renderGrid() {
 }
 
 function renderSchoolTile() {
+  const schoolDay = cal.schedule.schoolDay;
   const btn = document.createElement('button');
   btn.className = 'tile school';
-  btn.dataset.date = SCHOOL_DAY;
-  btn.setAttribute('aria-label', 'Wednesday 2 September — back to school');
-  btn.innerHTML = '<span class="day-num">2</span>'
+  btn.dataset.date = schoolDay;
+  btn.setAttribute('aria-label', `${friendlyDate(schoolDay)} — back to school`);
+  btn.innerHTML = `<span class="day-num">${parseDate(schoolDay).getUTCDate()}</span>`
     + '<span class="school-emoji">🎒</span>'
     + '<span class="school-label">School</span>';
   btn.addEventListener('click', openSchoolDay);
@@ -154,8 +128,9 @@ function renderSchoolTile() {
 }
 
 function openSchoolDay() {
-  openDate = SCHOOL_DAY;
-  modalTitle.textContent = friendlyDate(SCHOOL_DAY);
+  const schoolDay = cal.schedule.schoolDay;
+  openDate = schoolDay;
+  modalTitle.textContent = friendlyDate(schoolDay);
   modalNote.classList.add('hidden');
   modalTrip.classList.add('hidden');
   modalList.innerHTML = '<li class="school-scene">'
@@ -202,15 +177,21 @@ async function openDay(date) {
   modalTitle.textContent = friendlyDate(date);
   modalList.innerHTML = '<li class="loading">Loading…</li>';
   modalNote.classList.add('hidden');
-  const trip = tripFor(date);
-  const gran = !trip && grandparentDay(date);
-  const dad = !trip && !gran && dadOff(date);
-  modalTrip.textContent = trip ? `${trip.emoji} We're on holiday in ${trip.label}!`
-    : gran ? "👵👴 You're with Grandma and Grandpa today!"
-    : dad ? "👨 Daddy's off work today!" : '';
-  modalTrip.classList.toggle('gran-note', gran);
-  modalTrip.classList.toggle('dad-note', dad);
-  modalTrip.classList.toggle('hidden', !trip && !gran && !dad);
+  const info = dayInfo(date);
+  // One headline note, same priority the tile colours use; the cleaner
+  // is additive, so it tags along on whatever note is showing.
+  const notes = [];
+  if (info.trip) notes.push(`${info.trip.emoji} We're on holiday in ${info.trip.label}!`);
+  else if (info.gran) notes.push("👵👴 You're with Grandma and Grandpa today!");
+  else if (info.oma) notes.push("👩 You're at Oma's today!");
+  else if (info.dad) notes.push("👨 Daddy's off work today!");
+  if (info.cleaner) notes.push('🧹 The cleaners are coming today!');
+  modalTrip.textContent = notes.join(' ');
+  modalTrip.classList.toggle('gran-note', !info.trip && info.gran);
+  modalTrip.classList.toggle('oma-note', !info.trip && !info.gran && info.oma);
+  modalTrip.classList.toggle('dad-note', !info.trip && !info.gran && !info.oma && info.dad);
+  modalTrip.classList.toggle('cleaner-note', notes.length === 1 && info.cleaner);
+  modalTrip.classList.toggle('hidden', notes.length === 0);
   modal.classList.remove('hidden');
 
   const day = await api.get(`/api/day/${date}`).catch(() => null);
@@ -233,12 +214,13 @@ async function openDay(date) {
   cal.days[date].total = day.items.length;
   cal.days[date].done = day.items.filter((i) => i.done).length;
   refreshTile(date);
+  if (day.items.length === 0) {
+    modalList.innerHTML = '<li class="loading">Nothing planned yet!</li>';
+    return;
+  }
   modalList.innerHTML = '';
   for (const item of day.items) {
     modalList.appendChild(renderItem(date, item, locked));
-  }
-  if (day.items.length === 0) {
-    modalList.innerHTML = '<li class="loading">Nothing planned yet!</li>';
   }
 }
 
@@ -266,7 +248,7 @@ function renderItem(date, item, locked) {
       cal.days[date].done += done ? 1 : -1;
       refreshTile(date);
     } catch (e) {
-      if (e.status === undefined) {
+      if (e.network) {
         // No internet — keep the tick and send it once we're back online
         outbox.add({ date, type: item.type, id: item.id, done });
         li.classList.toggle('done', done);
@@ -350,6 +332,13 @@ async function load() {
     fresh = { ...cal, today: londonToday() };
   }
   cal = fresh;
+  // A service-worker-cached response from before the schedule moved
+  // server-side won't have `schedule` — fall back to an empty one rather
+  // than crash (the next online fetch brings the real thing).
+  cal.schedule = cal.schedule || {
+    trips: [], grandparentDays: [], omaDays: [], dadOffExtra: [], cleanerSkip: [],
+    schoolDay: '2026-09-02',
+  };
   // Offline overnight: the cached response still says yesterday.
   if (!navigator.onLine && cal.today < londonToday()) cal.today = londonToday();
   fetchedOn = londonToday();
