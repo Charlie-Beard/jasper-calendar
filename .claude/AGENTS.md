@@ -49,9 +49,12 @@ a migration if the user asks for a permanent seed change.
 3. Badge emoji in `renderTile()` + headline in `openDay()`
 4. CSS: `.tile.<type>` gradient + `.<type>-badge` position + note colour
    (`.trip-note.<type>-note`); check the 480px media block too
-5. Emoji overlap rule: top-LEFT = primary (Oma 👩, Cleaner 🧹, Trip 🐉,
-   Gran 👵👴), top-RIGHT = secondary (Dad 👨, Special 🎉) — two emojis must
-   never share a corner (e.g. Aug 4 = 👩 left + 🧹 right)
+5. Emoji overlap rule: ALL day-type badges default to top-LEFT (Trip 🐉,
+   Gran 👵👴, Oma 👩, Dad 👨, Cleaner 🧹); 🎉 Special is top-RIGHT. Two
+   emojis must never share a corner, so on combo days CSS pushes the
+   secondary badge right: dad→right on trip days, cleaner→right on
+   dad/oma days, and `.special` gets an extra right offset on those
+   combos. Blend gradients exist for .trip.dad, .dad.cleaner, .oma.cleaner.
 6. `npm test`, then browser-check (reload twice — see SW note)
 
 **API change**: worker.js + a test in test/api.test.js. Kid endpoints:
@@ -135,4 +138,5 @@ npx wrangler deploy --dry-run   # config sanity check without deploying
 
 Cleaners every Tue except Aug 25 (🧹 orange); Oma Aug 4 (👩 purple);
 Grandparents Jul 24, Aug 1/6/14/20 (👵👴 pink); Dad weekends + Jul 28,
-Aug 17 (👨 indigo); Wales trip Aug 21–28 (🐉 green); school day Sep 2 (🎒).
+Aug 11, Aug 17 (👨 indigo; Tuesdays blend into cleaner orange);
+Wales trip Aug 21–28 (🐉 green); school day Sep 2 (🎒).

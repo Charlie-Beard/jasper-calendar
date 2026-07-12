@@ -222,15 +222,16 @@ main {
   box-shadow: 0 3px 0 rgba(70, 120, 160, 0.28);
 }
 
+/* Dad sits top-left like the other day-type badges (Oma, Gran, Trip…) */
 .dad-badge {
   position: absolute;
   top: 4px;
-  right: 6px;
+  left: 6px;
   font-size: clamp(0.7rem, 2vw, 1rem);
 }
 
-/* Make room: the 🎉 badge shares the top-right corner on dad days */
-.tile.dad .special { right: calc(6px + 1.6em); }
+/* …except on trip days, where the trip emoji owns the left corner */
+.tile.trip.dad .dad-badge { right: 6px; left: auto; }
 
 /* Tuesday cleaner days — cleanerDay() in calendar.js */
 .tile.cleaner {
@@ -244,6 +245,15 @@ main {
   left: 6px;
   font-size: clamp(0.7rem, 2vw, 1rem);
 }
+
+/* Dad + cleaner (e.g. Tue 28 Jul) — dad's indigo bleeding into cleaner orange */
+.tile.dad.cleaner {
+  background: linear-gradient(135deg, #dde2ff 0%, #e5ddf0 45%, #ffd9bf 100%);
+  box-shadow: 0 3px 0 rgba(174, 113, 140, 0.3);
+}
+
+/* Dad owns the left corner on shared days — cleaner moves right */
+.tile.dad .cleaner-badge { right: 6px; left: auto; }
 
 /* Oma's house days — OMA_DAYS in calendar.js */
 .tile.oma {
@@ -269,6 +279,12 @@ main {
   right: 6px;
   left: auto;
 }
+
+/* Make room: the 🎉 badge shares the top-right corner when a day-type
+   badge has been pushed right (dad on trips, cleaner on dad/oma days) */
+.tile.trip.dad .special,
+.tile.dad.cleaner .special,
+.tile.oma.cleaner .special { right: calc(6px + 1.6em); }
 
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
@@ -323,10 +339,14 @@ main {
 
   .tile.today { outline-width: 3px; }
 
-  .trip-badge, .gran-badge, .oma-badge, .cleaner-badge { top: 2px; left: 3px; }
-  .dad-badge, .tile .special { top: 2px; right: 3px; }
-  .tile.dad .special { right: calc(3px + 1.3em); }
+  .trip-badge, .gran-badge, .oma-badge, .cleaner-badge, .dad-badge { top: 2px; left: 3px; }
+  .tile .special { top: 2px; right: 3px; }
+  .tile.trip.dad .dad-badge,
+  .tile.dad .cleaner-badge,
   .tile.oma.cleaner .cleaner-badge { right: 3px; left: auto; }
+  .tile.trip.dad .special,
+  .tile.dad.cleaner .special,
+  .tile.oma.cleaner .special { right: calc(3px + 1.3em); }
 
   .today-label, .trip-label, .school-label {
     padding: 1px 5px;

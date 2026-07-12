@@ -15,7 +15,7 @@ export const SCHEDULE = {
   omaDays: ['2026-08-04'],
 
   // Days Dad is off work, on top of every weekend.
-  dadOffExtra: ['2026-07-28', '2026-08-17'],
+  dadOffExtra: ['2026-07-28', '2026-08-11', '2026-08-17'],
 
   // Tuesdays the cleaners are NOT here (holiday weeks).
   cleanerSkip: ['2026-08-25'],
