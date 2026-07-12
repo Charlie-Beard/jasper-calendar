@@ -1,5 +1,7 @@
-// Bump the version whenever shell files change so clients pick up the update.
-const CACHE = 'jasper-v17';
+// Shell files are served stale-while-revalidate: instant launch from cache,
+// refreshed in the background — so an update appears on the NEXT launch with
+// no cache-version bump needed. Bump CACHE only to force-flush everything.
+const CACHE = 'jasper-v18';
 
 const SHELL = [
   '/',
@@ -7,6 +9,7 @@ const SHELL = [
   '/js/api.js',
   '/js/calendar.js',
   '/js/outbox.js',
+  '/js/version.js',
   '/manifest.webmanifest',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
@@ -25,16 +28,19 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Data (/api/*): network first, so it's always fresh; cached copy only as an
-// offline fallback. Shell: cache first for instant Home Screen launches.
+async function putInCache(request, res) {
+  if (res && res.ok) {
+    const cache = await caches.open(CACHE);
+    await cache.put(request, res.clone());
+  }
+  return res;
+}
+
+// Data (/api/*, /version.json): network first, so it's always fresh; cached
+// copy only as an offline fallback.
 async function networkFirst(request) {
   try {
-    const res = await fetch(request);
-    if (res.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, res.clone());
-    }
-    return res;
+    return await putInCache(request, await fetch(request));
   } catch (err) {
     const cached = await caches.match(request);
     if (cached) return cached;
@@ -42,19 +48,21 @@ async function networkFirst(request) {
   }
 }
 
-async function cacheFirst(request) {
+// Shell: answer from cache immediately, refresh the cached copy in the
+// background so the next launch gets any update.
+async function staleWhileRevalidate(event, request) {
   const cached = await caches.match(request);
-  if (cached) return cached;
-  const res = await fetch(request);
-  if (res.ok) {
-    const cache = await caches.open(CACHE);
-    cache.put(request, res.clone());
+  const refresh = fetch(request).then((res) => putInCache(request, res));
+  if (cached) {
+    event.waitUntil(refresh.catch(() => {})); // offline refresh failure is fine
+    return cached;
   }
-  return res;
+  return refresh;
 }
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
-  e.respondWith(url.pathname.startsWith('/api/') ? networkFirst(e.request) : cacheFirst(e.request));
+  const fresh = url.pathname.startsWith('/api/') || url.pathname === '/version.json';
+  e.respondWith(fresh ? networkFirst(e.request) : staleWhileRevalidate(e, e.request));
 });

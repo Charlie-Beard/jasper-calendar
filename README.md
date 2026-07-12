@@ -24,6 +24,9 @@ database. Free tier covers everything. See [PLAN.md](PLAN.md) for the full spec.
 Optional: in the Cloudflare dashboard, connect this GitHub repo (Workers →
 your worker → Settings → Builds) so every push deploys automatically.
 
+Every page shows the deployed build (`v<git-sha> · built <time>`) in the
+footer, so you can tell at a glance whether the latest push is live.
+
 ## Put it on the iPad
 
 Open the workers.dev URL in **Safari** → Share button → **Add to Home Screen**.
@@ -39,7 +42,11 @@ npm install
 cp .dev.vars.example .dev.vars   # then edit the password/secret
 npm run migrate:local
 npm run dev                      # http://localhost:8787
+npm test                         # API test suite (runs in the Workers runtime)
 ```
 
 Tip: set `TEST_TODAY=2026-08-05` in `.dev.vars` to preview what the calendar
 looks like mid-holidays. Icons are generated with `npm run icons`.
+
+The family schedule (trips, grandparent days, dad's days off, …) lives in
+[src/schedule.js](src/schedule.js) — edit it and push; no other steps needed.

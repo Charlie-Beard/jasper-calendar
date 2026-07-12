@@ -407,7 +407,9 @@ main {
 
 .trip-note { background: #e2f7ec; color: #1f7a4d; }
 .trip-note.gran-note { background: #fdeef4; color: #a13a6c; }
+.trip-note.oma-note { background: #f0e4f9; color: #7a3fa0; }
 .trip-note.dad-note { background: #eef0ff; color: #3f4b9e; }
+.trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 
 .checklist { list-style: none; }
 
@@ -517,3 +519,12 @@ main {
 .error { color: #c0392b; font-weight: 600; margin-top: 10px; }
 .logout-row { text-align: center; margin: 8px 0 24px; }
 .progress-line a { color: var(--ink-soft); }
+
+/* Deployed-build stamp (see public/js/version.js) */
+.version-footer {
+  text-align: center;
+  padding: 4px 0 calc(12px + env(safe-area-inset-bottom));
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  opacity: 0.7;
+}

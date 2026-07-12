@@ -146,6 +146,11 @@ async function boot() {
     specialDate.max = range.to;
     specialDate.value = range.today >= range.from && range.today <= range.to
       ? range.today : range.from;
+  } else {
+    // Couldn't load the holiday range — fall back to today so the special-days
+    // panel still points at a real date instead of requesting /day//activities.
+    specialDate.value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' })
+      .format(new Date());
   }
   if (getToken()) {
     showPortal();

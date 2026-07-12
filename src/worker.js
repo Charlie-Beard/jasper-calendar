@@ -1,5 +1,7 @@
 // Jasper's holiday calendar — Cloudflare Worker: JSON API + static assets.
 
+import { SCHEDULE } from './schedule.js';
+
 const HOLIDAY_START = '2026-07-23';
 const HOLIDAY_END = '2026-09-01';
 const TOKEN_LIFETIME_MS = 90 * 24 * 60 * 60 * 1000; // ~90 days, lasts the summer
@@ -112,12 +114,16 @@ async function getCalendar(env) {
     if (date > HOLIDAY_END) break;
     const special = extrasByDate[date] || 0;
     days[date] = {
+      // Deliberate trade-off: `total` uses the CURRENT default routine for
+      // every day, so editing the routine mid-summer retroactively changes
+      // past days (a finished day can gain/lose its star). Snapshotting
+      // defaults per day would fix that but isn't worth the complexity here.
       total: defaultCount + special,
       done: doneByDate[date] || 0,
       hasSpecial: special > 0,
     };
   }
-  return json({ from: HOLIDAY_START, to: HOLIDAY_END, today: todayISO(env), days });
+  return json({ from: HOLIDAY_START, to: HOLIDAY_END, today: todayISO(env), days, schedule: SCHEDULE });
 }
 
 async function getDay(env, date) {
@@ -218,13 +224,18 @@ async function updateActivity(env, scope, id, request) {
 }
 
 async function deleteActivity(env, scope, id) {
-  const result = await env.DB.prepare(
-    `DELETE FROM ${scope.table} WHERE id = ?${scope.where}`,
-  ).bind(id, ...scope.bindWhere).run();
-  if (result.meta.changes === 0) return error('No such activity', 404);
-  await env.DB.prepare(
-    'DELETE FROM completions WHERE activity_type = ? AND activity_id = ?',
-  ).bind(scope.completionType, id).run();
+  const exists = await env.DB.prepare(
+    `SELECT 1 FROM ${scope.table} WHERE id = ?${scope.where}`,
+  ).bind(id, ...scope.bindWhere).first();
+  if (!exists) return error('No such activity', 404);
+  // One batch (= one transaction): the activity and its completions go
+  // together, so a failure can't leave orphaned completions inflating counts.
+  await env.DB.batch([
+    env.DB.prepare(`DELETE FROM ${scope.table} WHERE id = ?${scope.where}`)
+      .bind(id, ...scope.bindWhere),
+    env.DB.prepare('DELETE FROM completions WHERE activity_type = ? AND activity_id = ?')
+      .bind(scope.completionType, id),
+  ]);
   return json({ ok: true });
 }
 
@@ -234,6 +245,16 @@ async function reorderActivities(env, scope, request) {
   if (!Array.isArray(ids) || !ids.every(Number.isInteger)) {
     return error('Expected { ids: [...] }', 400);
   }
+  // The list must be a permutation of the current ids — a partial or
+  // duplicated list would leave stale/duplicate sort_order values behind.
+  const existing = await env.DB.prepare(
+    `SELECT id FROM ${scope.table} WHERE 1=1${scope.where}`,
+  ).bind(...scope.bindWhere).all();
+  const current = new Set(existing.results.map((r) => r.id));
+  if (ids.length !== current.size || !ids.every((id) => current.has(id))
+      || new Set(ids).size !== ids.length) {
+    return error('ids must contain every current activity exactly once', 400);
+  }
   await env.DB.batch(ids.map((id, i) =>
     env.DB.prepare(`UPDATE ${scope.table} SET sort_order = ? WHERE id = ?${scope.where}`)
       .bind(i + 1, id, ...scope.bindWhere),
@@ -241,14 +262,40 @@ async function reorderActivities(env, scope, request) {
   return json({ ok: true });
 }
 
+// Brute-force protection: after MAX_LOGIN_FAILURES wrong passwords from one
+// IP within LOGIN_WINDOW_MS, further attempts get a 429 until the window rolls.
+const MAX_LOGIN_FAILURES = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+async function handleLogin(env, request) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  // Fail open: if the bookkeeping table is missing (migration 0003 not yet
+  // applied), log in without rate limiting rather than lock the parents out.
+  const track = (stmt) => stmt.catch((e) => { console.error('login rate limit:', e); return null; });
+
+  const cutoff = new Date(Date.now() - LOGIN_WINDOW_MS).toISOString();
+  const recent = await track(env.DB.batch([
+    env.DB.prepare('DELETE FROM login_failures WHERE attempted_at < ?').bind(cutoff),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM login_failures WHERE ip = ?').bind(ip),
+  ]));
+  if (recent && recent[1].results[0].n >= MAX_LOGIN_FAILURES) {
+    return error('Too many attempts — try again in a few minutes', 429);
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!(await passwordMatches(env, body?.password))) {
+    await track(env.DB.prepare('INSERT INTO login_failures (ip, attempted_at) VALUES (?, ?)')
+      .bind(ip, new Date().toISOString()).run());
+    return error('Wrong password', 401);
+  }
+  await track(env.DB.prepare('DELETE FROM login_failures WHERE ip = ?').bind(ip).run());
+  return json({ token: await signToken(env) });
+}
+
 async function handleAdmin(env, request, segments) {
   // segments: path parts after /api/admin
   if (segments[0] === 'login' && request.method === 'POST') {
-    const body = await request.json().catch(() => null);
-    if (!(await passwordMatches(env, body?.password))) {
-      return error('Wrong password', 401);
-    }
-    return json({ token: await signToken(env) });
+    return handleLogin(env, request);
   }
 
   if (!(await requireAdmin(env, request))) return error('Not authorised', 401);
