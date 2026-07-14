@@ -270,6 +270,19 @@ main {
   left: auto;
 }
 
+/* Living Rainforest days — rainforestDays in schedule.js */
+.tile.rainforest {
+  background: linear-gradient(180deg, #e2f6d3 0%, #bfe89f 100%);
+  box-shadow: 0 3px 0 rgba(88, 148, 42, 0.32);
+}
+
+.rainforest-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
   background: linear-gradient(180deg, #e3f4ff 0%, #c9e9ff 100%);
@@ -323,7 +336,7 @@ main {
 
   .tile.today { outline-width: 3px; }
 
-  .trip-badge, .gran-badge, .oma-badge, .cleaner-badge { top: 2px; left: 3px; }
+  .trip-badge, .gran-badge, .oma-badge, .rainforest-badge, .cleaner-badge { top: 2px; left: 3px; }
   .dad-badge, .tile .special { top: 2px; right: 3px; }
   .tile.dad .special { right: calc(3px + 1.3em); }
   .tile.oma.cleaner .cleaner-badge { right: 3px; left: auto; }
@@ -408,6 +421,7 @@ main {
 .trip-note { background: #e2f7ec; color: #1f7a4d; }
 .trip-note.gran-note { background: #fdeef4; color: #a13a6c; }
 .trip-note.oma-note { background: #f0e4f9; color: #7a3fa0; }
+.trip-note.rainforest-note { background: #e2f6d3; color: #3c6b17; }
 .trip-note.dad-note { background: #eef0ff; color: #3f4b9e; }
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 

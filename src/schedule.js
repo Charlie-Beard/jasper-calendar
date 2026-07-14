@@ -14,6 +14,9 @@ export const SCHEDULE = {
   // Days at Oma's (grandma's house) — add dates here as they get booked.
   omaDays: ['2026-08-04'],
 
+  // Days out at The Living Rainforest.
+  rainforestDays: ['2026-07-27'],
+
   // Days Dad is off work, on top of every weekend.
   dadOffExtra: ['2026-07-28', '2026-08-17'],
 
