@@ -1,172 +1,142 @@
-# Jasper Calendar - Agent Guidelines
+# Jasper Calendar — Agent Guide
 
-## Critical Mistakes to Avoid
+Read this first; it should save you exploring most of the repo. A tile
+calendar PWA for a 6-year-old's iPad covering the 2026 summer holidays
+(2026-07-23 → 2026-09-01, 41 days; "today" ticks over in Europe/London).
+One Cloudflare Worker (JSON API + static assets) + D1. No framework, no
+bundler, no TypeScript — plain ES modules, matching comment style.
 
-### 1. **Never Make Up Data**
-❌ WRONG: Invented random Oma days (July 31, August 11) without asking the user
-✅ RIGHT: Always ask the user for specific dates/values before implementing
+## Repo map (whole codebase, one line each)
 
-### 2. **Always Clear User Intent First**
-When adding new day types or features, explicitly confirm:
-- Which dates apply
-- Which emoji to use
-- What color scheme
-- How it combines with other indicators
+- `src/worker.js` — the whole API: router at the bottom, HMAC-token auth,
+  kid endpoints (calendar/day/toggle), admin CRUD via a `scopeFor(date)`
+  abstraction shared by defaults (date=null) and per-day activities
+- `src/schedule.js` — THE family schedule (trips/gran/oma/dadOffExtra/
+  cleanerSkip/schoolDay); served inside `/api/calendar` as `schedule`
+- `public/js/calendar.js` — kid UI: grid + day modal, `dayInfo(date)`
+  resolver, offline outbox integration, midnight-rollover refresh
+- `public/js/admin.js` — parent portal (login, routine + special days CRUD)
+- `public/js/api.js` — fetch wrapper; token in localStorage; network
+  failures throw `err.network === true`, HTTP errors carry `err.status`
+- `public/js/outbox.js` — offline tick queue in localStorage; flush()
+  settles an entry on success or 4xx ONLY (5xx/offline retries later)
+- `public/js/version.js` — fills the build-version footer on both pages
+- `public/sw.js` — service worker: shell = stale-while-revalidate,
+  `/api/*` + `/version.json` = network-first
+- `public/index.html`, `public/admin.html`, `public/css/style.css` — UI
+- `public/_headers` — CSP etc. on all assets (see Invariants)
+- `migrations/` — 0001 schema+seed, 0002 emoji routine, 0003 login_failures
+- `test/api.test.js` — 14 vitest tests against the real worker + D1
+- `scripts/generate-version.mjs` — stamps public/version.json (gitignored);
+  runs automatically via `build.command` in wrangler.jsonc
+- `scripts/generate-icons.mjs` — PWA icons (`npm run icons`)
 
-### 3. **Understand Emoji Overlap Prevention**
-When a tile has 2+ emojis, they MUST NOT overlap:
-- **Top-left position**: Primary indicator (Oma 👩, Cleaner 🧹, Trip 🐉, Gran 👵👴)
-- **Top-right position**: Secondary indicator (Dad 👨, Special 🎉)
-- Example: August 4 = `👩 🧹 4` (Oma left, Cleaner right)
-- Example: August 22-23 = `🐉 👨` (Trip left, Dad right)
+## Common tasks (do exactly this, nothing more)
 
-## Hot Reload & Cache Management
+**Change schedule dates (trip/gran/oma/dad/cleaner)**: edit
+`src/schedule.js`, push. No cache bump, no client change, no migration.
+Never invent dates — ask the user which dates apply.
 
-### Service Worker: stale-while-revalidate (no version bumps needed)
-The service worker serves shell files (HTML/CSS/JS) from cache instantly and
-refreshes them in the background, so **an update appears on the NEXT page
-load/launch — no cache version bump required**. When testing a change in the
-browser, reload twice (first load fetches the update, second shows it), or
-hard-reload.
+**Change the daily routine**: parents do this in `/admin.html`; only write
+a migration if the user asks for a permanent seed change.
 
-Bump `CACHE` in `public/sw.js` only if you need to force-flush every cached
-file at once (rare).
+**Add a new day type**:
+1. Data → `SCHEDULE` in src/schedule.js
+2. Flag → `dayInfo()` in calendar.js — the ONLY place priority lives
+   (tile and modal both consume it; never fork the logic). Current rules:
+   Gran/Oma suppress Dad; Cleaner is additive; modal headline order is
+   trip > gran > oma > dad, cleaner sentence appended.
+3. Badge emoji in `renderTile()` + headline in `openDay()`
+4. CSS: `.tile.<type>` gradient + `.<type>-badge` position + note colour
+   (`.trip-note.<type>-note`); check the 480px media block too
+5. Emoji overlap rule: ALL day-type badges default to top-LEFT (Trip 🐉,
+   Gran 👵👴, Oma 👩, Dad 👨, Cleaner 🧹); 🎉 Special is top-RIGHT. Two
+   emojis must never share a corner, so on combo days CSS pushes the
+   secondary badge right: dad→right on trip days, cleaner→right on
+   dad/oma days, and `.special` gets an extra right offset on those
+   combos. Blend gradients exist for .trip.dad, .dad.cleaner, .oma.cleaner.
+6. `npm test`, then browser-check (reload twice — see SW note)
 
-`/api/*` and `/version.json` are network-first: always fresh when online,
-cached copy only as an offline fallback.
+**API change**: worker.js + a test in test/api.test.js. Kid endpoints:
+`GET /api/calendar`, `GET /api/day/:date`, `POST /api/day/:date/toggle`
+(future dates 403). Admin (Bearer token from `POST /api/admin/login`):
+`/api/admin/defaults[/:id]`, `/api/admin/day/:date/activities[/:id]`,
+`PUT .../reorder` (ids must be a full permutation of current ids).
 
-### Restarting Dev Server
-For `.dev.vars` changes (like TEST_TODAY), need to:
-1. Kill the current wrangler dev process
-2. Restart: `npx wrangler dev --port 8787`
-3. The new environment variables will be loaded
+## D1 schema (memorise, don't re-read migrations)
 
-### Build version footer
-Every page shows `v<sha> · built <time>` in the footer, from
-`public/version.json` — generated by `scripts/generate-version.mjs`, which
-wrangler runs automatically before dev/deploy (`build.command` in
-wrangler.jsonc). Use it to confirm which deploy you're looking at.
+- `default_activities(id, title, sort_order)` — seeded routine, 10 rows
+- `day_activities(id, date, title, sort_order)` — per-day specials (🎉)
+- `completions(date, activity_type 'default'|'day', activity_id,
+  completed_at)` — PK (date, type, id); deleted with their activity
+- `login_failures(ip, attempted_at)` — rate limiting; self-pruning
 
-## Project Architecture
+Known trade-off (deliberate, don't "fix"): calendar totals use the
+CURRENT default routine for every day, so editing the routine mid-summer
+retroactively changes past days' star status.
 
-### Key Files
+## Dev, test, verify
 
-**src/schedule.js**
-- THE place to edit the family schedule (trips, grandparent/Oma days,
-  dad-off extras, cleaner skips, school day)
-- Served to the client inside `/api/calendar` as `schedule` — schedule
-  edits only need a worker deploy, never a service-worker cache bump
-
-**public/js/calendar.js**
-- Main rendering logic
-- `dayInfo(date)` — the single resolver from a date to its day types; the
-  tile AND the modal both use it, so keep any priority change in there
-- Priority system: Gran/Oma > Dad, Cleaner is additive
-
-**public/css/style.css**
-- Tile variants: `.tile.gran`, `.tile.oma`, `.tile.dad`, `.tile.cleaner`
-- Blend gradients: `.tile.trip.dad`, `.tile.oma.cleaner`
-- Badge positioning: `.tile-badge`, `.gran-badge`, `.oma-badge`, `.cleaner-badge`, `.dad-badge`
-
-**public/sw.js**
-- Service worker cache versioning
-- Always update CACHE when shell files change
-
-**.dev.vars**
-- Local development secrets
-- `TEST_TODAY=YYYY-MM-DD` to set calendar date
-- `ADMIN_PASSWORD`, `AUTH_SECRET`
-
-### Configuration
-
-**Holiday Period**
-- Start: 2026-07-23 (Thursday)
-- End: 2026-09-01 (Tuesday)
-- 41 days total
-
-**Day Type Data** (in src/schedule.js, served via /api/calendar)
-```javascript
-export const SCHEDULE = {
-  trips: [{ from, to, label, emoji }],
-  grandparentDays: ['YYYY-MM-DD', ...],
-  omaDays: ['YYYY-MM-DD', ...],
-  dadOffExtra: ['YYYY-MM-DD', ...],  // on top of every weekend
-  cleanerSkip: ['YYYY-MM-DD', ...],  // skip cleaners on these Tuesdays
-  schoolDay: 'YYYY-MM-DD',
-};
+```sh
+npm run dev            # wrangler dev :8787 (needs .dev.vars; TEST_TODAY=2026-08-05 pins "today")
+npm test               # vitest, ~5s, runs in the Workers runtime with real D1
+npm run migrate:local  # after adding a migration
+npx wrangler deploy --dry-run   # config sanity check without deploying
 ```
 
-**Tuesday Cleaners**
-- Every Tuesday except dates in CLEANER_SKIP
-- Orange color (#ffe8d6 → #ffd9bf)
-- Emoji: 🧹
+- Restart wrangler dev after `.dev.vars` changes. Kill it with
+  `pkill -f '[.]bin/wrangler'; pkill -f '[w]orkerd'` (plain pkill matches
+  your own compound command).
+- UI verification: use the `verify` skill (Playwright with
+  `executablePath: '/opt/pw-browsers/chromium'`, viewport 820×1180).
 
-**Dad Off**
-- Every Saturday & Sunday
-- Plus DAD_OFF_EXTRA dates
-- Indigo color (#eef0ff → #dde2ff)
-- Emoji: 👨
+**Test-suite gotchas (cost real debugging time — trust them):**
+- Config is `vitest.config.mjs` — must stay `.mjs` (package.json has no
+  `"type": "module"`, and a `.js` config gets required as CJS and fails).
+- `@cloudflare/vitest-pool-workers` ≥0.18 (vitest 4): the old
+  `.../config` subpath and `defineWorkersConfig` are GONE. Use the
+  `cloudflareTest({...})` Vite plugin from the package root, options
+  (wrangler.configPath, miniflare.bindings) unchanged.
+- Tests call `worker.fetch(request, env)` directly (unit style — avoids
+  the ASSETS binding). Bindings incl. TEST_TODAY are set in vitest.config.
+- There is NO per-test storage isolation: a `beforeEach` wipes
+  completions/day_activities/login_failures. Keep tests self-contained;
+  give each rate-limit test its own `CF-Connecting-IP`.
 
-**Grandparent Days**
-- Specific dates only (GRANDPARENT_DAYS array)
-- Pink color (#fdeef4 → #fad7e6)
-- Emoji: 👵👴
-- Takes priority over Dad indicator
+## Invariants — do not break
 
-**Oma Days**
-- Specific dates only (OMA_DAYS array)
-- Purple color (#d4b8e6 → #bf9fdd)
-- Emoji: 👩
-- Takes priority over Dad indicator
-- Blends with Cleaner on shared days
+- **CSP** (`public/_headers`): `default-src 'self'` — NO inline
+  `<script>`, no inline event handlers, no style="" attributes, no CDN
+  imports. Everything ships as same-origin files.
+- **SW model**: shell is stale-while-revalidate → changes appear on the
+  SECOND load; no `CACHE` version bump needed (bump only to force-flush).
+  `/api/*` and `/version.json` stay network-first. Don't reintroduce
+  cache-first for anything that updates.
+- **Outbox settle rule**: only success or 4xx removes a pending tick.
+  A 5xx or network failure must retry later — never drop a kid's tick.
+- **Login rate limit fails OPEN**: if login_failures is missing/broken,
+  log the error and let the password check decide — never lock parents
+  out. (Remote DB needs `npm run migrate:remote` once for 0003.)
+- **XSS discipline**: activity titles are user data — render via
+  `textContent` only; `innerHTML` is reserved for trusted literals.
+- **version.json is generated** (gitignored) — never commit it; the
+  footer must keep working when it's absent (shows "local dev build").
+- Server and client both validate: date in range, future-day toggle 403,
+  kid-friendly error messages (they surface in `alert()`).
 
-**Family Trips**
-- Date ranges (TRIPS array)
-- Green color (#e9faf1 → #d3f2e1)
-- Custom emoji per trip (e.g., 🐉 for Wales)
+## Judgement rules (learned the hard way)
 
-## Workflow Best Practices
+- Never invent schedule data (dates/emoji/colours) — ask the user.
+- Confirm intent for new day types: which dates, which emoji, what
+  colour, how it combines with existing indicators.
+- The footer (`v<sha> · built <time>`, Europe/London) tells you which
+  build is deployed — check it before debugging "my change isn't live".
+- Deploys: push → Cloudflare Workers Builds auto-deploys; wrangler's
+  `build.command` stamps the version even there (WORKERS_CI_COMMIT_SHA).
 
-### When Changing Schedule Dates Only
-1. Edit the arrays in src/schedule.js
-2. Deploy — nothing else. The client picks it up on the next /api/calendar fetch.
+## Current schedule state (see src/schedule.js for truth)
 
-### When Adding New Day Types
-1. Add the data to SCHEDULE in src/schedule.js
-2. Add the flag to dayInfo() in calendar.js — check priority rules
-3. Add emoji to the badges string in renderTile() and a note in openDay()
-4. Add CSS class and styling
-5. Add badge positioning CSS
-6. Test in browser (reload twice — stale-while-revalidate)
-
-### When Modifying Colors
-1. Update CSS gradient colors
-2. Test in a fresh browser tab (reload twice — stale-while-revalidate)
-
-### When Testing Different Dates
-1. Edit .dev.vars TEST_TODAY value
-2. Kill and restart wrangler dev
-3. Open fresh browser tab
-
-## Common Pitfalls
-
-- ❌ Expecting a shell change on the FIRST reload — stale-while-revalidate
-  serves the cached copy and refreshes in the background; reload twice
-- ❌ Positioning both emojis on same side → they overlap
-- ❌ Adding day types without checking priority (in dayInfo(), one place)
-- ❌ Making up data instead of asking user
-- ❌ Forgetting `npm test` — the API has a vitest suite (test/api.test.js)
-
-## Current State
-
-**Active Day Types**
-- Cleaners: Every Tuesday except Aug 25 (🧹, orange)
-- Oma: Aug 4 only (👩, purple, blends with cleaners on Tuesdays)
-- Grandparents: Specific dates (👵👴, pink)
-- Dad Off: Weekends + Jul 28, Aug 17 (👨, indigo)
-- Wales Trip: Aug 21-28 (🐉, green)
-
-**Emoji Positioning Examples**
-- Aug 4: `👩` (left) `🧹` (right) - Oma + Tuesday cleaner
-- Aug 22-23: `🐉` (left) `👨` (right) - Trip + Dad
-- Aug 25: `🐉` only - Trip day, cleaner skipped
+Cleaners every Tue except Aug 25 (🧹 orange); Oma Aug 4 (👩 purple);
+Grandparents Jul 24, Aug 1/6/14/20 (👵👴 pink); Dad weekends + Jul 28,
+Aug 11, Aug 17 (👨 indigo; Tuesdays blend into cleaner orange);
+Wales trip Aug 21–28 (🐉 green); school day Sep 2 (🎒).
