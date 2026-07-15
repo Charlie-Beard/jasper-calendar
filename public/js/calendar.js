@@ -9,8 +9,9 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 // schedule edits don't need a client redeploy to reach the iPad.
 
 // The one place a date resolves to its day types — the tile and the modal
-// both use this, so they can never disagree. Priority: Grandma/Oma/rainforest
-// days take the tile over from Dad; the cleaner is additive.
+// both use this, so they can never disagree. Priority: Grandma/Oma and
+// day-out days (rainforest, Beale Park) take the tile over from Dad; the
+// cleaner is additive.
 function dayInfo(date) {
   const s = cal.schedule;
   const dow = parseDate(date).getUTCDay();
@@ -18,10 +19,11 @@ function dayInfo(date) {
   const gran = s.grandparentDays.includes(date);
   const oma = s.omaDays.includes(date);
   const rainforest = (s.rainforestDays || []).includes(date);
-  const dad = !gran && !oma && !rainforest
+  const bealePark = (s.bealeParkDays || []).includes(date);
+  const dad = !gran && !oma && !rainforest && !bealePark
     && (dow === 0 || dow === 6 || s.dadOffExtra.includes(date));
   const cleaner = dow === 2 && !s.cleanerSkip.includes(date);
-  return { trip, gran, oma, rainforest, dad, cleaner };
+  return { trip, gran, oma, rainforest, bealePark, dad, cleaner };
 }
 
 const grid = document.getElementById('grid');
@@ -76,7 +78,7 @@ function tileStatus(date) {
 function renderTile(btn, date) {
   const d = parseDate(date);
   const dayNum = d.getUTCDate();
-  const { trip, gran, oma, rainforest, dad, cleaner } = dayInfo(date);
+  const { trip, gran, oma, rainforest, bealePark, dad, cleaner } = dayInfo(date);
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
@@ -84,6 +86,7 @@ function renderTile(btn, date) {
     + (gran ? '<span class="gran-badge">👵👴</span>' : '')
     + (oma ? '<span class="oma-badge">👩</span>' : '')
     + (rainforest ? '<span class="rainforest-badge">🦜</span>' : '')
+    + (bealePark ? '<span class="beale-badge">🦚</span>' : '')
     + (dad ? '<span class="dad-badge">👨</span>' : '')
     + (cleaner ? '<span class="cleaner-badge">🧹</span>' : '');
   const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
@@ -95,6 +98,7 @@ function renderTile(btn, date) {
     + (gran ? ' gran' : '')
     + (oma ? ' oma' : '')
     + (rainforest ? ' rainforest' : '')
+    + (bealePark ? ' beale' : '')
     + (dad ? ' dad' : '')
     + (cleaner ? ' cleaner' : '');
   btn.innerHTML = `${monthLabel}${badges}<span class="day-num">${dayNum}</span>${tripLabel}${todayLabel}${tileStatus(date)}`;
@@ -188,13 +192,15 @@ async function openDay(date) {
   else if (info.gran) notes.push("👵👴 You're with Grandma and Grandpa today!");
   else if (info.oma) notes.push("👩 You're at Oma's today!");
   else if (info.rainforest) notes.push("🦜 You're off to the Living Rainforest today!");
+  else if (info.bealePark) notes.push("🦚 You're off to Beale Park today!");
   else if (info.dad) notes.push("👨 Daddy's off work today!");
   if (info.cleaner) notes.push('🧹 The cleaners are coming today!');
   modalTrip.textContent = notes.join(' ');
   modalTrip.classList.toggle('gran-note', !info.trip && info.gran);
   modalTrip.classList.toggle('oma-note', !info.trip && !info.gran && info.oma);
   modalTrip.classList.toggle('rainforest-note', !info.trip && !info.gran && !info.oma && info.rainforest);
-  modalTrip.classList.toggle('dad-note', !info.trip && !info.gran && !info.oma && !info.rainforest && info.dad);
+  modalTrip.classList.toggle('beale-note', !info.trip && !info.gran && !info.oma && !info.rainforest && info.bealePark);
+  modalTrip.classList.toggle('dad-note', !info.trip && !info.gran && !info.oma && !info.rainforest && !info.bealePark && info.dad);
   modalTrip.classList.toggle('cleaner-note', notes.length === 1 && info.cleaner);
   modalTrip.classList.toggle('hidden', notes.length === 0);
   modal.classList.remove('hidden');
@@ -341,7 +347,8 @@ async function load() {
   // server-side won't have `schedule` — fall back to an empty one rather
   // than crash (the next online fetch brings the real thing).
   cal.schedule = cal.schedule || {
-    trips: [], grandparentDays: [], omaDays: [], rainforestDays: [], dadOffExtra: [], cleanerSkip: [],
+    trips: [], grandparentDays: [], omaDays: [], rainforestDays: [], bealeParkDays: [],
+    dadOffExtra: [], cleanerSkip: [],
     schoolDay: '2026-09-02',
   };
   // Offline overnight: the cached response still says yesterday.

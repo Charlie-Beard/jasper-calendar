@@ -17,6 +17,9 @@ export const SCHEDULE = {
   // Days out at The Living Rainforest.
   rainforestDays: ['2026-07-27'],
 
+  // Days out at Beale Park.
+  bealeParkDays: ['2026-07-29'],
+
   // Days Dad is off work, on top of every weekend.
   dadOffExtra: ['2026-07-28', '2026-08-17'],
 
