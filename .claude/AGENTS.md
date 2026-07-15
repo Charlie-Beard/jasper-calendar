@@ -44,13 +44,15 @@ a migration if the user asks for a permanent seed change.
 1. Data → `SCHEDULE` in src/schedule.js
 2. Flag → `dayInfo()` in calendar.js — the ONLY place priority lives
    (tile and modal both consume it; never fork the logic). Current rules:
-   Gran/Oma suppress Dad; Cleaner is additive; modal headline order is
-   trip > gran > oma > dad, cleaner sentence appended.
+   Gran/Oma and day-out types (rainforest, bealePark) suppress Dad;
+   Cleaner is additive; modal headline order is trip > gran > oma >
+   rainforest > bealePark > dad, cleaner sentence appended.
 3. Badge emoji in `renderTile()` + headline in `openDay()`
 4. CSS: `.tile.<type>` gradient + `.<type>-badge` position + note colour
    (`.trip-note.<type>-note`); check the 480px media block too
 5. Emoji overlap rule: ALL day-type badges default to top-LEFT (Trip 🐉,
-   Gran 👵👴, Oma 👩, Dad 👨, Cleaner 🧹); 🎉 Special is top-RIGHT. Two
+   Gran 👵👴, Oma 👩, Rainforest 🦜, Beale 🦚, Dad 👨, Cleaner 🧹);
+   🎉 Special is top-RIGHT. Two
    emojis must never share a corner, so on combo days CSS pushes the
    secondary badge right: dad→right on trip days, cleaner→right on
    dad/oma days, and `.special` gets an extra right offset on those
@@ -124,6 +126,25 @@ npx wrangler deploy --dry-run   # config sanity check without deploying
 - Server and client both validate: date in range, future-day toggle 403,
   kid-friendly error messages (they surface in `alert()`).
 
+## Deploying — "push it" means "make it live" (learned the hard way)
+
+Live app: https://jasper-calendar.charlesjohnbeard.workers.dev/ (the
+iPad points here). Cloudflare Workers Builds deploys **`main` only** —
+a pushed feature branch is invisible on the iPad. So when the user asks
+to push/ship a change, finish the job all the way to production:
+
+1. Push the session branch, open a PR, merge it into `main`.
+2. Confirm the "Workers Builds: jasper-calendar" check run is green
+   (GitHub MCP `pull_request_read` → `get_check_runs`).
+3. Remote sessions have NO Cloudflare credentials (`wrangler deploy`
+   can't run) and the sandbox network policy blocks `*.workers.dev`,
+   so you cannot curl the live site — verify via the check run.
+4. Tell the user: the SW shows a new deploy on the SECOND launch —
+   fully close and reopen the PWA. The footer version (`/version.json`)
+   is network-first and updates immediately; if the footer sha is still
+   old after a relaunch, the deploy genuinely didn't happen — check
+   Cloudflare dashboard → Workers → jasper-calendar → Builds.
+
 ## Judgement rules (learned the hard way)
 
 - Never invent schedule data (dates/emoji/colours) — ask the user.
@@ -131,12 +152,12 @@ npx wrangler deploy --dry-run   # config sanity check without deploying
   colour, how it combines with existing indicators.
 - The footer (`v<sha> · built <time>`, Europe/London) tells you which
   build is deployed — check it before debugging "my change isn't live".
-- Deploys: push → Cloudflare Workers Builds auto-deploys; wrangler's
-  `build.command` stamps the version even there (WORKERS_CI_COMMIT_SHA).
+  Wrangler's `build.command` stamps it in CI too (WORKERS_CI_COMMIT_SHA).
 
 ## Current schedule state (see src/schedule.js for truth)
 
 Cleaners every Tue except Aug 25 (🧹 orange); Oma Aug 4 (👩 purple);
 Grandparents Jul 24, Aug 1/6/14/20 (👵👴 pink); Dad weekends + Jul 28,
 Aug 11, Aug 17 (👨 indigo; Tuesdays blend into cleaner orange);
+Living Rainforest Jul 27 (🦜 leafy green); Beale Park Jul 29 (🦚 teal);
 Wales trip Aug 21–28 (🐉 green); school day Sep 2 (🎒).
