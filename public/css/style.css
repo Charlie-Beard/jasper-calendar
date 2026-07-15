@@ -216,10 +216,10 @@ main {
   box-shadow: 0 3px 0 rgba(93, 107, 214, 0.3);
 }
 
-/* Two events on one day = a hard diagonal two-colour split, top-left
-   colour matching the badge that owns the left corner. No blending. */
+/* Two events on one day = a hard vertical two-colour split, left half
+   matching the badge that owns the left corner. No blending. */
 .tile.trip.dad {
-  background: linear-gradient(135deg, #d3f2e1 50%, #dde2ff 50%);
+  background: linear-gradient(90deg, #d3f2e1 50%, #dde2ff 50%);
   box-shadow: 0 3px 0 rgba(70, 120, 160, 0.28);
 }
 
@@ -249,7 +249,7 @@ main {
 
 /* Dad + cleaner (e.g. Tue 28 Jul) — hard indigo/orange split */
 .tile.dad.cleaner {
-  background: linear-gradient(135deg, #dde2ff 50%, #ffd9bf 50%);
+  background: linear-gradient(90deg, #dde2ff 50%, #ffd9bf 50%);
   box-shadow: 0 3px 0 rgba(174, 113, 140, 0.3);
 }
 
@@ -271,7 +271,7 @@ main {
 
 /* Oma + cleaner together — hard purple/orange split */
 .tile.oma.cleaner {
-  background: linear-gradient(135deg, #bf9fdd 50%, #ffd9bf 50%);
+  background: linear-gradient(90deg, #bf9fdd 50%, #ffd9bf 50%);
   box-shadow: 0 3px 0 rgba(180, 60, 200, 0.32);
 }
 
