@@ -56,7 +56,10 @@ a migration if the user asks for a permanent seed change.
    emojis must never share a corner, so on combo days CSS pushes the
    secondary badge right: dad→right on trip days, cleaner→right on
    dad/oma days, and `.special` gets an extra right offset on those
-   combos. Blend gradients exist for .trip.dad, .dad.cleaner, .oma.cleaner.
+   combos. Combo days use a HARD diagonal two-colour split
+   (`linear-gradient(135deg, A 50%, B 50%)`, left-corner badge's colour
+   first) — .trip.dad, .dad.cleaner, .oma.cleaner. Never blend/fade two
+   day colours into each other; the user dislikes it.
 6. `npm test`, then browser-check (reload twice — see SW note)
 
 **API change**: worker.js + a test in test/api.test.js. Kid endpoints:
