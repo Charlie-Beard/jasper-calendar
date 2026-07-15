@@ -280,6 +280,32 @@ main {
   left: auto;
 }
 
+/* Living Rainforest days — rainforestDays in schedule.js */
+.tile.rainforest {
+  background: linear-gradient(180deg, #e2f6d3 0%, #bfe89f 100%);
+  box-shadow: 0 3px 0 rgba(88, 148, 42, 0.32);
+}
+
+.rainforest-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
+/* Beale Park days — bealeParkDays in schedule.js */
+.tile.beale {
+  background: linear-gradient(180deg, #d6f4f0 0%, #a8e6de 100%);
+  box-shadow: 0 3px 0 rgba(24, 138, 126, 0.32);
+}
+
+.beale-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
 /* Make room: the 🎉 badge shares the top-right corner when a day-type
    badge has been pushed right (dad on trips, cleaner on dad/oma days) */
 .tile.trip.dad .special,
@@ -339,7 +365,7 @@ main {
 
   .tile.today { outline-width: 3px; }
 
-  .trip-badge, .gran-badge, .oma-badge, .cleaner-badge, .dad-badge { top: 2px; left: 3px; }
+  .trip-badge, .gran-badge, .oma-badge, .rainforest-badge, .beale-badge, .cleaner-badge, .dad-badge { top: 2px; left: 3px; }
   .tile .special { top: 2px; right: 3px; }
   .tile.trip.dad .dad-badge,
   .tile.dad .cleaner-badge,
@@ -428,6 +454,8 @@ main {
 .trip-note { background: #e2f7ec; color: #1f7a4d; }
 .trip-note.gran-note { background: #fdeef4; color: #a13a6c; }
 .trip-note.oma-note { background: #f0e4f9; color: #7a3fa0; }
+.trip-note.rainforest-note { background: #e2f6d3; color: #3c6b17; }
+.trip-note.beale-note { background: #d6f4f0; color: #0e6e63; }
 .trip-note.dad-note { background: #eef0ff; color: #3f4b9e; }
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 
