@@ -56,10 +56,10 @@ a migration if the user asks for a permanent seed change.
    emojis must never share a corner, so on combo days CSS pushes the
    secondary badge right: dad→right on trip days, cleaner→right on
    dad/oma days, and `.special` gets an extra right offset on those
-   combos. Combo days use a HARD diagonal two-colour split
-   (`linear-gradient(135deg, A 50%, B 50%)`, left-corner badge's colour
-   first) — .trip.dad, .dad.cleaner, .oma.cleaner. Never blend/fade two
-   day colours into each other; the user dislikes it.
+   combos. Combo days use a HARD vertical two-colour split
+   (`linear-gradient(90deg, A 50%, B 50%)`, left-corner badge's colour
+   on the left half) — .trip.dad, .dad.cleaner, .oma.cleaner. Never
+   blend/fade two day colours into each other; the user dislikes it.
 6. `npm test`, then browser-check (reload twice — see SW note)
 
 **API change**: worker.js + a test in test/api.test.js. Kid endpoints:
@@ -139,14 +139,22 @@ to push/ship a change, finish the job all the way to production:
 1. Push the session branch, open a PR, merge it into `main`.
 2. Confirm the "Workers Builds: jasper-calendar" check run is green
    (GitHub MCP `pull_request_read` → `get_check_runs`).
-3. Remote sessions have NO Cloudflare credentials (`wrangler deploy`
-   can't run) and the sandbox network policy blocks `*.workers.dev`,
-   so you cannot curl the live site — verify via the check run.
-4. Tell the user: the SW shows a new deploy on the SECOND launch —
+3. Merging is NOT the end. The build only uploads a new version; it
+   does NOT go live until someone PROMOTES it to production (confirmed
+   2026-07-15: the user had to promote by hand). Remote sessions have
+   NO Cloudflare credentials, so after merging you must tell the user:
+   "merged and built — now promote it in Cloudflare dashboard →
+   Workers → jasper-calendar → Deployments → promote the new version"
+   (or they run `npx wrangler versions deploy` locally). Durable fixes
+   to offer: add CLOUDFLARE_API_TOKEN to the session environment so
+   the agent can promote, or switch the Workers Builds deploy command
+   to plain `npx wrangler deploy` so merges go live automatically.
+4. The sandbox network policy also blocks `*.workers.dev`, so you
+   cannot curl the live site — verify via the check run + the footer.
+5. Tell the user: the SW shows a new deploy on the SECOND launch —
    fully close and reopen the PWA. The footer version (`/version.json`)
    is network-first and updates immediately; if the footer sha is still
-   old after a relaunch, the deploy genuinely didn't happen — check
-   Cloudflare dashboard → Workers → jasper-calendar → Builds.
+   old after a relaunch, the new version wasn't promoted — see step 3.
 
 ## Judgement rules (learned the hard way)
 
