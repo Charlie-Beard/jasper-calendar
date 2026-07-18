@@ -8,6 +8,7 @@ const SHELL = [
   '/css/style.css',
   '/js/api.js',
   '/js/calendar.js',
+  '/js/day-types.js',
   '/js/outbox.js',
   '/js/version.js',
   '/manifest.webmanifest',

@@ -2,6 +2,10 @@
 // it's served by the Worker inside /api/calendar, which is always network-first).
 // Dates are 'YYYY-MM-DD'.
 
+// The calendar's first and last day (inclusive).
+export const HOLIDAY_START = '2026-07-23';
+export const HOLIDAY_END = '2026-09-01';
+
 export const SCHEDULE = {
   // Family trips: tiles in these ranges get the green "away" look.
   trips: [
