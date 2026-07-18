@@ -1,27 +1,23 @@
 import { api } from './api.js';
 import { outbox } from './outbox.js';
+import { matchDayTypes } from './day-types.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // The family schedule (trips, grandparent days, …) lives in src/schedule.js
 // on the server and arrives inside /api/calendar as `cal.schedule` — so
-// schedule edits don't need a client redeploy to reach the iPad.
+// schedule edits don't need a client redeploy to reach the iPad. What each
+// schedule entry MEANS (badges, notes, priority) lives in day-types.js.
 
 // The one place a date resolves to its day types — the tile and the modal
-// both use this, so they can never disagree. Priority: Grandma/Oma/rainforest
-// days take the tile over from Dad; the cleaner is additive.
+// both use this, so they can never disagree. `types` is the matched entries
+// from DAY_TYPES (headline first, additive ones after).
 function dayInfo(date) {
   const s = cal.schedule;
   const dow = parseDate(date).getUTCDay();
-  const trip = s.trips.find((t) => date >= t.from && date <= t.to) || null;
-  const gran = s.grandparentDays.includes(date);
-  const oma = s.omaDays.includes(date);
-  const rainforest = (s.rainforestDays || []).includes(date);
-  const dad = !gran && !oma && !rainforest
-    && (dow === 0 || dow === 6 || s.dadOffExtra.includes(date));
-  const cleaner = dow === 2 && !s.cleanerSkip.includes(date);
-  return { trip, gran, oma, rainforest, dad, cleaner };
+  const trip = (s.trips || []).find((t) => date >= t.from && date <= t.to) || null;
+  return { trip, types: matchDayTypes(s, date, dow) };
 }
 
 const grid = document.getElementById('grid');
@@ -76,27 +72,23 @@ function tileStatus(date) {
 function renderTile(btn, date) {
   const d = parseDate(date);
   const dayNum = d.getUTCDate();
-  const { trip, gran, oma, rainforest, dad, cleaner } = dayInfo(date);
+  const { trip, types } = dayInfo(date);
   const monthLabel = (date === cal.from || dayNum === 1)
     ? `<span class="month">${MONTHS[d.getUTCMonth()]}</span>` : '';
   const todayLabel = date === cal.today ? '<span class="today-label">Today</span>' : '';
-  const badges = (trip ? `<span class="trip-badge">${trip.emoji}</span>` : '')
-    + (gran ? '<span class="gran-badge">👵👴</span>' : '')
-    + (oma ? '<span class="oma-badge">👩</span>' : '')
-    + (rainforest ? '<span class="rainforest-badge">🦜</span>' : '')
-    + (dad ? '<span class="dad-badge">👨</span>' : '')
-    + (cleaner ? '<span class="cleaner-badge">🧹</span>' : '');
+  // Two badge slots — top-left, then top-right — so badges never overlap.
+  const left = [];
+  const right = [];
+  if (trip) left.push(trip.emoji);
+  for (const t of types) ((t.side === 'right' || left.length) ? right : left).push(t.emoji);
+  const badges = (left.length ? `<span class="badge-left">${left.join('')}</span>` : '')
+    + (right.length ? `<span class="badge-right">${right.join('')}</span>` : '');
   const tripLabel = trip && date === trip.from ? `<span class="trip-label">${trip.label}</span>` : '';
-  btn.className = 'tile'
-    + (date === cal.today ? ' today' : '')
-    + (date < cal.today ? ' past' : '')
-    + (date > cal.today ? ' future' : '')
-    + (trip ? ' trip' : '')
-    + (gran ? ' gran' : '')
-    + (oma ? ' oma' : '')
-    + (rainforest ? ' rainforest' : '')
-    + (dad ? ' dad' : '')
-    + (cleaner ? ' cleaner' : '');
+  btn.className = ['tile',
+    date === cal.today ? 'today' : (date < cal.today ? 'past' : 'future'),
+    trip ? 'trip' : '',
+    ...types.map((t) => t.key),
+  ].filter(Boolean).join(' ');
   btn.innerHTML = `${monthLabel}${badges}<span class="day-num">${dayNum}</span>${tripLabel}${todayLabel}${tileStatus(date)}`;
 }
 
@@ -180,23 +172,20 @@ async function openDay(date) {
   modalTitle.textContent = friendlyDate(date);
   modalList.innerHTML = '<li class="loading">Loading…</li>';
   modalNote.classList.add('hidden');
-  const info = dayInfo(date);
-  // One headline note, same priority the tile colours use; the cleaner
-  // is additive, so it tags along on whatever note is showing.
+  const { trip, types } = dayInfo(date);
+  // One headline note — the trip, else the day's headline type — with any
+  // additive notes (the cleaner) tagging along after it.
+  const headline = types.find((t) => !t.additive) || null;
   const notes = [];
-  if (info.trip) notes.push(`${info.trip.emoji} We're on holiday in ${info.trip.label}!`);
-  else if (info.gran) notes.push("👵👴 You're with Grandma and Grandpa today!");
-  else if (info.oma) notes.push("👩 You're at Oma's today!");
-  else if (info.rainforest) notes.push("🦜 You're off to the Living Rainforest today!");
-  else if (info.dad) notes.push("👨 Daddy's off work today!");
-  if (info.cleaner) notes.push('🧹 The cleaners are coming today!');
+  if (trip) notes.push(`${trip.emoji} We're on holiday in ${trip.label}!`);
+  else if (headline) notes.push(`${headline.emoji} ${headline.note}`);
+  for (const t of types) if (t.additive) notes.push(`${t.emoji} ${t.note}`);
   modalTrip.textContent = notes.join(' ');
-  modalTrip.classList.toggle('gran-note', !info.trip && info.gran);
-  modalTrip.classList.toggle('oma-note', !info.trip && !info.gran && info.oma);
-  modalTrip.classList.toggle('rainforest-note', !info.trip && !info.gran && !info.oma && info.rainforest);
-  modalTrip.classList.toggle('dad-note', !info.trip && !info.gran && !info.oma && !info.rainforest && info.dad);
-  modalTrip.classList.toggle('cleaner-note', notes.length === 1 && info.cleaner);
-  modalTrip.classList.toggle('hidden', notes.length === 0);
+  // The note is tinted after whichever type leads it (trip = the base green).
+  const tint = trip ? null : (headline || types[0] || null);
+  modalTrip.className = 'modal-note trip-note'
+    + (tint ? ` ${tint.key}-note` : '')
+    + (notes.length ? '' : ' hidden');
   modal.classList.remove('hidden');
 
   const day = await api.get(`/api/day/${date}`).catch(() => null);
@@ -338,12 +327,10 @@ async function load() {
   }
   cal = fresh;
   // A service-worker-cached response from before the schedule moved
-  // server-side won't have `schedule` — fall back to an empty one rather
-  // than crash (the next online fetch brings the real thing).
-  cal.schedule = cal.schedule || {
-    trips: [], grandparentDays: [], omaDays: [], rainforestDays: [], dadOffExtra: [], cleanerSkip: [],
-    schoolDay: '2026-09-02',
-  };
+  // server-side won't have `schedule` — day-types.js treats missing fields
+  // as empty, so only schoolDay needs a stand-in (the next online fetch
+  // brings the real thing).
+  cal.schedule = cal.schedule || { schoolDay: '2026-09-02' };
   // Offline overnight: the cached response still says yesterday.
   if (!navigator.onLine && cal.today < londonToday()) cal.today = londonToday();
   fetchedOn = londonToday();
