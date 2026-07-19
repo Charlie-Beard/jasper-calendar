@@ -1,9 +1,7 @@
 // Jasper's holiday calendar — Cloudflare Worker: JSON API + static assets.
 
-import { SCHEDULE } from './schedule.js';
+import { SCHEDULE, HOLIDAY_START, HOLIDAY_END } from './schedule.js';
 
-const HOLIDAY_START = '2026-07-23';
-const HOLIDAY_END = '2026-09-01';
 const TOKEN_LIFETIME_MS = 90 * 24 * 60 * 60 * 1000; // ~90 days, lasts the summer
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
