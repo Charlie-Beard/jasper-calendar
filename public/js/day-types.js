@@ -47,6 +47,12 @@ export const DAY_TYPES = [
     dates: 'rainforestDays',
   },
   {
+    key: 'beale',
+    emoji: '🦚',
+    note: "You're off to Beale Park today!",
+    dates: 'bealeParkDays',
+  },
+  {
     key: 'dad',
     emoji: '👨',
     side: 'right',

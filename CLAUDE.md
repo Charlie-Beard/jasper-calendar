@@ -86,12 +86,43 @@ npm test
 - The admin API trusts `scopeFor()` to isolate per-day activities from
   defaults; any new admin route should go through the same scope shape.
 - Run `npm test` before pushing; add a test when you touch `src/worker.js`.
+- Combo days (two types on one tile) use a HARD vertical two-colour split
+  (`linear-gradient(90deg, A 50%, B 50%)`, left half = the left-corner
+  badge's colour). Never blend/fade two day colours — the user dislikes it.
+
+## Deploying — "push it" means "make it live" (learned the hard way)
+
+Live app: https://jasper-calendar.charlesjohnbeard.workers.dev/ (the
+iPad points here). Cloudflare Workers Builds deploys **`main` only** —
+a pushed feature branch is invisible on the iPad. So when the user asks
+to push/ship/deploy a change, finish the job all the way to production:
+
+1. Push the session branch, open a PR, merge it into `main`.
+2. Confirm the "Workers Builds: jasper-calendar" check run is green
+   (GitHub MCP `pull_request_read` → `get_check_runs`).
+3. Merging is NOT the end. The build only uploads a new version; it
+   does NOT go live until someone PROMOTES it to production (confirmed
+   2026-07-15: the user had to promote by hand). Remote sessions have
+   NO Cloudflare credentials, so after merging you must tell the user:
+   "merged and built — now promote it in Cloudflare dashboard →
+   Workers → jasper-calendar → Deployments → promote the new version"
+   (or they run `npx wrangler versions deploy` locally). Durable fixes
+   to offer: add CLOUDFLARE_API_TOKEN to the session environment so
+   the agent can promote, or switch the Workers Builds deploy command
+   to plain `npx wrangler deploy` so merges go live automatically.
+4. The sandbox network policy also blocks `*.workers.dev`, so you
+   cannot curl the live site — verify via the check run + the footer.
+5. Tell the user: the SW shows a new deploy on the SECOND launch —
+   fully close and reopen the PWA. The footer version (`/version.json`)
+   is network-first and updates immediately; if the footer sha is still
+   old after a relaunch, the new version wasn't promoted — see step 3.
 
 ## Current schedule state (2026 summer)
 
 Holiday range 2026-07-23 → 2026-09-01 (41 days), school day 2026-09-02.
 Day types: cleaners every Tuesday except skips (🧹 orange, additive), Oma
-(👩 purple), grandparents (👵👴 pink), rainforest (🦜 green), dad off
-weekends + extras (👨 indigo, right badge), Wales trip Aug 21–28 (🐉 green).
+(👩 purple), grandparents (👵👴 pink), rainforest (🦜 green), Beale Park
+(🦚 teal), dad off weekends + extras (👨 indigo, right badge), Wales trip
+Aug 21–28 (🐉 green).
 The live dates are whatever `src/schedule.js` says — treat that file, not
 this paragraph, as the source of truth.

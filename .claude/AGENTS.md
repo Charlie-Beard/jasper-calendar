@@ -1,4 +1,4 @@
-# Jasper Calendar - Agent Guidelines
+# Jasper Calendar — Agent Guide
 
 This file has moved: the maintainer guide now lives in [`/CLAUDE.md`](../CLAUDE.md)
 at the repository root (which Claude Code loads automatically). Keep all
