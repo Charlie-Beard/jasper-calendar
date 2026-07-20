@@ -57,7 +57,9 @@ export const DAY_TYPES = [
     emoji: '👨',
     side: 'right',
     note: "Daddy's off work today!",
-    match: (s, date, dow) => dow === 0 || dow === 6 || (s.dadOffExtra || []).includes(date),
+    match: (s, date, dow) =>
+      (dow === 0 || dow === 6 || (s.dadOffExtra || []).includes(date))
+      && !(s.dadOffSkip || []).includes(date),
   },
   {
     key: 'cleaner',

@@ -16,7 +16,12 @@ export const SCHEDULE = {
   grandparentDays: ['2026-07-24', '2026-08-01', '2026-08-06', '2026-08-14', '2026-08-20'],
 
   // Days at Oma's (grandma's house) — add dates here as they get booked.
-  omaDays: ['2026-08-04'],
+  // Oma is with us for the whole Wales trip (21–28 Aug).
+  omaDays: [
+    '2026-08-04',
+    '2026-08-21', '2026-08-22', '2026-08-23', '2026-08-24',
+    '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-28',
+  ],
 
   // Days out at The Living Rainforest.
   rainforestDays: ['2026-07-27'],
@@ -26,6 +31,9 @@ export const SCHEDULE = {
 
   // Days Dad is off work, on top of every weekend.
   dadOffExtra: ['2026-07-28', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-17'],
+
+  // Weekend days that should NOT count as Dad-off days.
+  dadOffSkip: ['2026-08-22', '2026-08-23'],
 
   // Tuesdays the cleaners are NOT here (holiday weeks).
   cleanerSkip: ['2026-08-25'],

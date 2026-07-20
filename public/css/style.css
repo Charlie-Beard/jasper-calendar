@@ -255,6 +255,13 @@ main {
   box-shadow: 0 3px 0 rgba(180, 60, 200, 0.32);
 }
 
+/* Trip + Oma (Oma joins the Wales trip) — hard green/purple split
+   (the 🐉 trip badge owns the left corner, 👩 the right) */
+.tile.trip.oma {
+  background: linear-gradient(90deg, #d3f2e1 50%, #bf9fdd 50%);
+  box-shadow: 0 3px 0 rgba(100, 100, 160, 0.3);
+}
+
 /* Living Rainforest days */
 .tile.rainforest {
   background: linear-gradient(180deg, #e2f6d3 0%, #bfe89f 100%);
