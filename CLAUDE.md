@@ -34,8 +34,10 @@ Three touch points, all declarative:
    types stack on top; `side: 'right'` pins the badge to the right slot). The
    file's header comment documents the semantics.
 3. **`public/css/style.css`** — add a `.tile.<key>` gradient and a
-   `.<key>-note` tint (plus a `.tile.<a>.<b>` blend gradient only if two types
-   genuinely co-occur, like oma+cleaner).
+   `.<key>-note` tint (plus a `.tile.<a>.<b>` rule only if two types genuinely
+   co-occur, like oma+cleaner). Combo tiles show the two colours **split hard
+   down the middle** — each type's own gradient on the same side as its badge,
+   never a smooth blend (a deliberate choice; don't "fix" it back to a blend).
 
 Badges position themselves: `renderTile()` fills a top-left then a top-right
 slot, so two emojis can never overlap. Then run `npm test` and check the

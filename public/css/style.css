@@ -190,8 +190,10 @@ main {
 .badge-right ~ .special { right: calc(6px + 1.6em); }
 
 /* --- Day-type tile colours + modal note tints ---
-   One `.tile.<key>` gradient (+ blends for combinations that co-occur) and
-   one `.<key>-note` tint per entry in public/js/day-types.js. */
+   One `.tile.<key>` gradient and one `.<key>-note` tint per entry in
+   public/js/day-types.js. Combinations that co-occur get a `.tile.<a>.<b>`
+   rule showing both colours split hard down the middle — each type's own
+   gradient on the same side as its badge — never a smooth blend. */
 
 /* Trip days (SCHEDULE.trips in src/schedule.js) */
 .tile.trip {
@@ -221,9 +223,12 @@ main {
   box-shadow: 0 3px 0 rgba(93, 107, 214, 0.3);
 }
 
-/* Trip + dad off together (Wales weekend) — green blending into indigo */
+/* Trip + dad off together (Wales weekend) — trip green left, dad indigo
+   right, split down the middle (dad's badge sits in the right slot) */
 .tile.trip.dad {
-  background: linear-gradient(135deg, #e2f7ec 0%, #d3f2e1 40%, #dde2ff 100%);
+  background:
+    linear-gradient(180deg, #e9faf1 0%, #d3f2e1 100%) left / 50% 100% no-repeat,
+    linear-gradient(180deg, #eef0ff 0%, #dde2ff 100%) right / 50% 100% no-repeat;
   box-shadow: 0 3px 0 rgba(70, 120, 160, 0.28);
 }
 
@@ -239,9 +244,12 @@ main {
   box-shadow: 0 3px 0 rgba(168, 80, 200, 0.32);
 }
 
-/* Oma + cleaner together — purple blending into orange */
+/* Oma + cleaner together — oma purple left, cleaner orange right, split
+   down the middle (matching the badge slots: 👩 left, 🧹 right) */
 .tile.oma.cleaner {
-  background: linear-gradient(135deg, #d4b8e6 0%, #bf9fdd 40%, #ffd9bf 100%);
+  background:
+    linear-gradient(180deg, #d4b8e6 0%, #bf9fdd 100%) left / 50% 100% no-repeat,
+    linear-gradient(180deg, #ffe8d6 0%, #ffd9bf 100%) right / 50% 100% no-repeat;
   box-shadow: 0 3px 0 rgba(180, 60, 200, 0.32);
 }
 
