@@ -190,8 +190,10 @@ main {
 .badge-right ~ .special { right: calc(6px + 1.6em); }
 
 /* --- Day-type tile colours + modal note tints ---
-   One `.tile.<key>` gradient (+ blends for combinations that co-occur) and
-   one `.<key>-note` tint per entry in public/js/day-types.js. */
+   One `.tile.<key>` gradient and one `.<key>-note` tint per entry in
+   public/js/day-types.js. Combinations that co-occur get a `.tile.<a>.<b>`
+   rule: a hard vertical two-colour split (90deg, 50%/50%), left half
+   matching the badge that owns the left corner — never a smooth blend. */
 
 /* Trip days (SCHEDULE.trips in src/schedule.js) */
 .tile.trip {
@@ -251,6 +253,13 @@ main {
 .tile.oma.cleaner {
   background: linear-gradient(90deg, #bf9fdd 50%, #ffd9bf 50%);
   box-shadow: 0 3px 0 rgba(180, 60, 200, 0.32);
+}
+
+/* Trip + Oma (Oma joins the Wales trip) — hard green/purple split
+   (the 🐉 trip badge owns the left corner, 👩 the right) */
+.tile.trip.oma {
+  background: linear-gradient(90deg, #d3f2e1 50%, #bf9fdd 50%);
+  box-shadow: 0 3px 0 rgba(100, 100, 160, 0.3);
 }
 
 /* Living Rainforest days */

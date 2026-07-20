@@ -34,8 +34,9 @@ Three touch points, all declarative:
    types stack on top; `side: 'right'` pins the badge to the right slot). The
    file's header comment documents the semantics.
 3. **`public/css/style.css`** — add a `.tile.<key>` gradient and a
-   `.<key>-note` tint (plus a `.tile.<a>.<b>` blend gradient only if two types
-   genuinely co-occur, like oma+cleaner).
+   `.<key>-note` tint (plus a `.tile.<a>.<b>` rule only if two types genuinely
+   co-occur, like oma+cleaner). Combo tiles use the hard vertical split
+   described under "Invariants" — never a smooth blend.
 
 Badges position themselves: `renderTile()` fills a top-left then a top-right
 slot, so two emojis can never overlap. Then run `npm test` and check the
@@ -100,22 +101,24 @@ to push/ship/deploy a change, finish the job all the way to production:
 1. Push the session branch, open a PR, merge it into `main`.
 2. Confirm the "Workers Builds: jasper-calendar" check run is green
    (GitHub MCP `pull_request_read` → `get_check_runs`).
-3. Merging is NOT the end. The build only uploads a new version; it
-   does NOT go live until someone PROMOTES it to production (confirmed
-   2026-07-15: the user had to promote by hand). Remote sessions have
-   NO Cloudflare credentials, so after merging you must tell the user:
-   "merged and built — now promote it in Cloudflare dashboard →
-   Workers → jasper-calendar → Deployments → promote the new version"
-   (or they run `npx wrangler versions deploy` locally). Durable fixes
-   to offer: add CLOUDFLARE_API_TOKEN to the session environment so
-   the agent can promote, or switch the Workers Builds deploy command
-   to plain `npx wrangler deploy` so merges go live automatically.
-4. The sandbox network policy also blocks `*.workers.dev`, so you
-   cannot curl the live site — verify via the check run + the footer.
+3. Merges deploy straight to production (policy since 2026-07-20: the
+   user rolls back by reverting the commit on `main`, so the Workers
+   Builds deploy command must stay plain `npx wrangler deploy` — never
+   `wrangler versions upload`, which uploads without going live). If
+   the live footer sha stops tracking `main` after green builds, the
+   dashboard deploy command has probably regressed to an upload-only
+   flow — tell the user to set it back to `npx wrangler deploy`
+   (Cloudflare dashboard → Workers → jasper-calendar → Settings →
+   Build → deploy command).
+4. The sandbox network policy blocks `*.workers.dev`, so you cannot
+   curl the live site — verify via the check run + the footer.
 5. Tell the user: the SW shows a new deploy on the SECOND launch —
    fully close and reopen the PWA. The footer version (`/version.json`)
    is network-first and updates immediately; if the footer sha is still
-   old after a relaunch, the new version wasn't promoted — see step 3.
+   old after a relaunch, see step 3.
+6. To roll back: `git revert` the bad commit on `main` (via a PR) and
+   let the build redeploy — don't promote old versions by hand in the
+   dashboard, that leaves `main` and production disagreeing.
 
 ## Current schedule state (2026 summer)
 
