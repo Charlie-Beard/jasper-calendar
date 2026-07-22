@@ -90,6 +90,14 @@ npm test
 - Combo days (two types on one tile) use a HARD vertical two-colour split
   (`linear-gradient(90deg, A 50%, B 50%)`, left half = the left-corner
   badge's colour). Never blend/fade two day colours — the user dislikes it.
+- **Start from the latest `main` — the checkout may be stale.** Web sessions
+  clone the repo when the session is *created*, which can be long before work
+  starts; editing from that snapshot has silently reverted recent merges
+  before. Before the first edit: `git fetch origin main`, then rebuild the
+  session branch on it (`git checkout -B <branch> origin/main` if the branch
+  has no work yet, `git rebase origin/main` if it has commits to keep). The
+  SessionStart hook (.claude/hooks/session-start.sh) prints a STALE CHECKOUT
+  warning when this applies — never start editing while it's unresolved.
 
 ## Deploying — "push it" means "make it live" (learned the hard way)
 
