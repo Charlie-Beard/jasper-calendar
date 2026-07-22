@@ -99,6 +99,13 @@ npm test
   SessionStart hook (.claude/hooks/session-start.sh) prints a STALE CHECKOUT
   warning when this applies — never start editing while it's unresolved.
 
+## Repo hygiene (cleaned up 2026-07-22)
+
+`main` is the repository's default branch and the only long-lived branch —
+keep it that way. It was once accidentally an old feature branch, which made
+every new session start from a stale snapshot and silently revert merged
+work. Session branches should be deleted after their PR merges.
+
 ## Deploying — "push it" means "make it live" (learned the hard way)
 
 Live app: https://jasper-calendar.charlesjohnbeard.workers.dev/ (the
