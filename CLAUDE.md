@@ -18,7 +18,7 @@ client. `npm test` runs the API suite; the `verify` skill
 | `public/js/api.js` | Fetch wrapper; flags connection failures with `err.network` so callers can tell "offline" from "server said no". |
 | `public/js/outbox.js` | Offline ticks queued in localStorage until the server has them. |
 | `public/js/admin.js` | Parent portal (login, routine + special-day CRUD). |
-| `public/css/style.css` | Kid-friendly styling. Per-day-type gradients (`.tile.<key>`) and note tints (`.<key>-note`); generic badge slots (`.badge-left` / `.badge-right`). |
+| `public/css/style.css` | Kid-friendly styling. Per-day-type solid block colours (`.tile.<key>`) and note tints (`.<key>-note`); generic badge slots (`.badge-left` / `.badge-right`). |
 | `public/sw.js` | Service worker. Shell = stale-while-revalidate; `/api/*` and `/version.json` = network-first. |
 | `migrations/` | D1 schema. Add new numbered files; never edit applied ones. |
 | `test/api.test.js` | Vitest suite against the real worker + isolated D1. "Today" pinned to 2026-08-05. |
@@ -33,7 +33,7 @@ Three touch points, all declarative:
    order (the first matching non-additive entry wins the tile; `additive: true`
    types stack on top; `side: 'right'` pins the badge to the right slot). The
    file's header comment documents the semantics.
-3. **`public/css/style.css`** — add a `.tile.<key>` gradient and a
+3. **`public/css/style.css`** — add a solid `.tile.<key>` block colour and a
    `.<key>-note` tint (plus a `.tile.<a>.<b>` rule only if two types genuinely
    co-occur, like oma+cleaner). Combo tiles use the hard vertical split
    described under "Invariants" — never a smooth blend.
