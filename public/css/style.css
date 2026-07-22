@@ -190,14 +190,15 @@ main {
 .badge-right ~ .special { right: calc(6px + 1.6em); }
 
 /* --- Day-type tile colours + modal note tints ---
-   One `.tile.<key>` gradient and one `.<key>-note` tint per entry in
-   public/js/day-types.js. Combinations that co-occur get a `.tile.<a>.<b>`
-   rule: a hard vertical two-colour split (90deg, 50%/50%), left half
-   matching the badge that owns the left corner — never a smooth blend. */
+   One solid `.tile.<key>` block colour and one `.<key>-note` tint per entry
+   in public/js/day-types.js — no gradients or fades on tiles, ever.
+   Combinations that co-occur get a `.tile.<a>.<b>` rule: a hard vertical
+   two-colour split (90deg, 50%/50%), left half matching the badge that owns
+   the left corner — never a smooth blend. */
 
 /* Trip days (SCHEDULE.trips in src/schedule.js) */
 .tile.trip {
-  background: linear-gradient(180deg, #e9faf1 0%, #d3f2e1 100%);
+  background: #d3f2e1;
   box-shadow: 0 3px 0 rgba(31, 122, 77, 0.22);
 }
 
@@ -213,13 +214,13 @@ main {
 
 /* Grandma & Grandpa days */
 .tile.gran {
-  background: linear-gradient(180deg, #fdeef4 0%, #fad7e6 100%);
+  background: #fad7e6;
   box-shadow: 0 3px 0 rgba(196, 74, 130, 0.28);
 }
 
 /* Dad's days off — weekends plus SCHEDULE.dadOffExtra */
 .tile.dad {
-  background: linear-gradient(180deg, #bcd6ff 0%, #8fb4ff 100%);
+  background: #8fb4ff;
   box-shadow: 0 3px 0 rgba(70, 100, 200, 0.34);
 }
 
@@ -232,7 +233,7 @@ main {
 
 /* Tuesday cleaner days */
 .tile.cleaner {
-  background: linear-gradient(180deg, #ffe8d6 0%, #ffd9bf 100%);
+  background: #ffd9bf;
   box-shadow: 0 3px 0 rgba(255, 140, 66, 0.28);
 }
 
@@ -245,7 +246,7 @@ main {
 
 /* Oma's house days */
 .tile.oma {
-  background: linear-gradient(180deg, #d4b8e6 0%, #bf9fdd 100%);
+  background: #bf9fdd;
   box-shadow: 0 3px 0 rgba(168, 80, 200, 0.32);
 }
 
@@ -264,7 +265,7 @@ main {
 
 /* Swimming pool days */
 .tile.swim {
-  background: linear-gradient(180deg, #d6f0ff 0%, #aeddfa 100%);
+  background: #aeddfa;
   box-shadow: 0 3px 0 rgba(41, 128, 185, 0.32);
 }
 
@@ -277,19 +278,19 @@ main {
 
 /* Living Rainforest days */
 .tile.rainforest {
-  background: linear-gradient(180deg, #e2f6d3 0%, #bfe89f 100%);
+  background: #bfe89f;
   box-shadow: 0 3px 0 rgba(88, 148, 42, 0.32);
 }
 
 /* Beale Park days */
 .tile.beale {
-  background: linear-gradient(180deg, #d6f4f0 0%, #a8e6de 100%);
+  background: #a8e6de;
   box-shadow: 0 3px 0 rgba(24, 138, 126, 0.32);
 }
 
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
-  background: linear-gradient(180deg, #e3f4ff 0%, #c9e9ff 100%);
+  background: #c9e9ff;
   box-shadow: 0 3px 0 rgba(79, 182, 232, 0.4);
 }
 
