@@ -262,6 +262,19 @@ main {
   box-shadow: 0 3px 0 rgba(100, 100, 160, 0.3);
 }
 
+/* Swimming pool days */
+.tile.swim {
+  background: linear-gradient(180deg, #d6f0ff 0%, #aeddfa 100%);
+  box-shadow: 0 3px 0 rgba(41, 128, 185, 0.32);
+}
+
+/* Oma + swimming together — hard purple/blue split (👩 owns the left
+   corner, 🏊 the right) */
+.tile.oma.swim {
+  background: linear-gradient(90deg, #bf9fdd 50%, #aeddfa 50%);
+  box-shadow: 0 3px 0 rgba(120, 90, 200, 0.32);
+}
+
 /* Living Rainforest days */
 .tile.rainforest {
   background: linear-gradient(180deg, #e2f6d3 0%, #bfe89f 100%);
@@ -416,6 +429,7 @@ main {
 .trip-note.beale-note { background: #d6f4f0; color: #0e6e63; }
 .trip-note.dad-note { background: #cdddff; color: #2f3a8e; }
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
+.trip-note.swim-note { background: #d6f0ff; color: #1a6a9e; }
 
 .checklist { list-style: none; }
 
