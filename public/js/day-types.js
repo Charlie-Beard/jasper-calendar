@@ -62,6 +62,13 @@ export const DAY_TYPES = [
       && !(s.dadOffSkip || []).includes(date),
   },
   {
+    key: 'swim',
+    emoji: '🏊',
+    additive: true,
+    note: "You're going to the swimming pool today!",
+    dates: 'swimmingDays',
+  },
+  {
     key: 'cleaner',
     emoji: '🧹',
     additive: true,
