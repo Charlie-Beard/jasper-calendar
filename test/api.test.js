@@ -48,7 +48,7 @@ describe('calendar', () => {
     expect(cal.to).toBe('2026-09-01');
     expect(cal.today).toBe(TODAY);
     expect(Object.keys(cal.days)).toHaveLength(41);
-    expect(cal.days[TODAY]).toEqual({ total: 10, done: 0, hasSpecial: false });
+    expect(cal.days[TODAY]).toEqual({ total: 11, done: 0, hasSpecial: false });
     expect(cal.schedule.schoolDay).toBe('2026-09-02');
     expect(Array.isArray(cal.schedule.trips)).toBe(true);
   });
@@ -59,7 +59,7 @@ describe('day + toggle', () => {
     const res = await call(`/api/day/${TODAY}`);
     expect(res.status).toBe(200);
     const day = await res.json();
-    expect(day.items).toHaveLength(10);
+    expect(day.items).toHaveLength(11);
     expect(day.items.every((i) => i.type === 'default' && i.done === false)).toBe(true);
   });
 
@@ -170,7 +170,7 @@ describe('admin CRUD', () => {
     const { id } = await res.json();
 
     const cal = await (await call('/api/calendar')).json();
-    expect(cal.days[TODAY]).toMatchObject({ total: 11, hasSpecial: true });
+    expect(cal.days[TODAY]).toMatchObject({ total: 12, hasSpecial: true });
     const day = await (await call(`/api/day/${TODAY}`)).json();
     expect(day.items.find((i) => i.type === 'day' && i.id === id).title).toBe('Trip to the zoo');
 
