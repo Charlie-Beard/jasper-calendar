@@ -174,7 +174,7 @@ async function openDay(date) {
   modalNote.classList.add('hidden');
   const { trip, types } = dayInfo(date);
   // One headline note — the trip, else the day's headline type — with any
-  // additive notes (the cleaner) tagging along after it.
+  // additive notes (dad-off, swimming, the cleaner) tagging along after it.
   const headline = types.find((t) => !t.additive) || null;
   const notes = [];
   if (trip) notes.push(`${trip.emoji} We're on holiday in ${trip.label}!`);
