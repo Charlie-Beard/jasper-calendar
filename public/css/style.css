@@ -244,6 +244,13 @@ main {
   box-shadow: 0 3px 0 rgba(174, 113, 140, 0.3);
 }
 
+/* Grandparents + dad off (e.g. Thu 6 Aug) — hard pink/indigo split (the
+   👵👴 badge sits top-left, the 👨 badge top-right) */
+.tile.gran.dad {
+  background: linear-gradient(90deg, #fad7e6 50%, #8fb4ff 50%);
+  box-shadow: 0 3px 0 rgba(133, 87, 165, 0.3);
+}
+
 /* Oma's house days */
 .tile.oma {
   background: #bf9fdd;

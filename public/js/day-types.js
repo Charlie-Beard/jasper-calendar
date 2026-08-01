@@ -11,10 +11,13 @@
 // Semantics:
 // - Entries are in priority order. The FIRST matching non-additive entry is
 //   the day's headline: it colours the tile and provides the modal note, and
-//   any later non-additive entries are suppressed (so a grandparent day hides
-//   the dad-off indicator).
-// - `additive: true` entries (the cleaner) match independently: their class,
-//   badge and note appear alongside whatever else the day has.
+//   any later non-additive entries are suppressed (so an Oma day hides the
+//   rainforest indicator).
+// - `additive: true` entries (dad-off, swimming, the cleaner) match
+//   independently: their class, badge and note appear alongside whatever else
+//   the day has. Dad being off work is orthogonal to where Jasper is, so it
+//   stacks on top of a grandparent/Oma/day-out headline rather than losing to
+//   it.
 // - Trips (the date ranges in SCHEDULE.trips) are handled separately in
 //   calendar.js: a trip outranks every note here but does NOT suppress the
 //   headline type's tile class (the tile blends, e.g. `.tile.trip.dad`).
@@ -56,6 +59,7 @@ export const DAY_TYPES = [
     key: 'dad',
     emoji: '👨',
     side: 'right',
+    additive: true,
     note: "Daddy's off work today!",
     match: (s, date, dow) =>
       (dow === 0 || dow === 6 || (s.dadOffExtra || []).includes(date))
