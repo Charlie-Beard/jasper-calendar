@@ -24,7 +24,10 @@ export const SCHEDULE = {
   ],
 
   // Days out at The Living Rainforest.
-  rainforestDays: ['2026-07-30', '2026-08-05'],
+  rainforestDays: ['2026-07-30'],
+
+  // Days out at the Discovery Centre.
+  discoveryDays: ['2026-08-05'],
 
   // Days out at Beale Park.
   bealeParkDays: ['2026-07-29', '2026-08-03'],
