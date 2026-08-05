@@ -139,7 +139,8 @@ to push/ship/deploy a change, finish the job all the way to production:
 
 Holiday range 2026-07-23 → 2026-09-01 (41 days), school day 2026-09-02.
 Day types: cleaners every Tuesday except skips (🧹 orange, additive), Oma
-(👩 purple), grandparents (👵👴 pink), rainforest (🦜 green), Beale Park
+(👩 purple), grandparents (👵👴 pink), rainforest (🦜 green), Discovery
+Centre (🐍 yellow), Beale Park
 (🦚 teal), dad off weekends + extras (👨 indigo, right badge), Wales trip
 Aug 21–28 (🐉 green).
 The live dates are whatever `src/schedule.js` says — treat that file, not

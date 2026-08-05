@@ -56,6 +56,12 @@ export const DAY_TYPES = [
     dates: 'bealeParkDays',
   },
   {
+    key: 'discovery',
+    emoji: '🐍',
+    note: "You're off to the Discovery Centre today!",
+    dates: 'discoveryDays',
+  },
+  {
     key: 'dad',
     emoji: '👨',
     side: 'right',

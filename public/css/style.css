@@ -295,6 +295,12 @@ main {
   box-shadow: 0 3px 0 rgba(24, 138, 126, 0.32);
 }
 
+/* Discovery Centre days — yellow, a colour no other day type uses */
+.tile.discovery {
+  background: #ffe066;
+  box-shadow: 0 3px 0 rgba(201, 150, 15, 0.34);
+}
+
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
   background: #c9e9ff;
@@ -435,6 +441,7 @@ main {
 .trip-note.oma-note { background: #f0e4f9; color: #7a3fa0; }
 .trip-note.rainforest-note { background: #e2f6d3; color: #3c6b17; }
 .trip-note.beale-note { background: #d6f4f0; color: #0e6e63; }
+.trip-note.discovery-note { background: #fff3c4; color: #8a6200; }
 .trip-note.dad-note { background: #cdddff; color: #2f3a8e; }
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 .trip-note.swim-note { background: #d6f0ff; color: #1a6a9e; }
