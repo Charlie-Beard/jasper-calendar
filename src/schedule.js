@@ -37,8 +37,8 @@ export const SCHEDULE = {
 
   // Days Dad is off work, on top of every weekend.
   dadOffExtra: [
-    '2026-07-28', '2026-07-31', '2026-08-06', '2026-08-11',
-    '2026-08-12', '2026-08-13', '2026-08-17',
+    '2026-07-28', '2026-07-31', '2026-08-06', '2026-08-07',
+    '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-17',
   ],
 
   // Weekend days that should NOT count as Dad-off days.
