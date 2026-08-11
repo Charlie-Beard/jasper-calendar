@@ -301,6 +301,19 @@ main {
   box-shadow: 0 3px 0 rgba(201, 150, 15, 0.34);
 }
 
+/* Families-over-to-ours days — terracotta, a colour no other day type uses */
+.tile.friends {
+  background: #e0a37a;
+  box-shadow: 0 3px 0 rgba(160, 90, 45, 0.34);
+}
+
+/* Families over + dad off (Sat 15 Aug) — hard terracotta/indigo split (the
+   👨‍👩‍👧‍👦 badge sits top-left, the 👨 badge top-right) */
+.tile.friends.dad {
+  background: linear-gradient(90deg, #e0a37a 50%, #8fb4ff 50%);
+  box-shadow: 0 3px 0 rgba(120, 100, 130, 0.32);
+}
+
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
   background: #c9e9ff;
@@ -445,6 +458,7 @@ main {
 .trip-note.dad-note { background: #cdddff; color: #2f3a8e; }
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 .trip-note.swim-note { background: #d6f0ff; color: #1a6a9e; }
+.trip-note.friends-note { background: #f8e3d3; color: #8a4b1e; }
 
 .checklist { list-style: none; }
 
