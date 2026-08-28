@@ -68,6 +68,12 @@ export const DAY_TYPES = [
     dates: 'friendsDays',
   },
   {
+    key: 'seeingfriends',
+    emoji: '👸',
+    note: "You're seeing friends today!",
+    dates: 'seeingFriendsDays',
+  },
+  {
     key: 'dad',
     emoji: '👨',
     side: 'right',

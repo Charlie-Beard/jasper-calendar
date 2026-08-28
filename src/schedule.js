@@ -38,6 +38,9 @@ export const SCHEDULE = {
   // Days other families come over to our house.
   friendsDays: ['2026-08-15'],
 
+  // Days out seeing friends.
+  seeingFriendsDays: ['2026-08-30'],
+
   // Days Dad is off work, on top of every weekend.
   dadOffExtra: [
     '2026-07-28', '2026-07-31', '2026-08-06', '2026-08-07',

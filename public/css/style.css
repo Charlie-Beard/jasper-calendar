@@ -314,6 +314,20 @@ main {
   box-shadow: 0 3px 0 rgba(120, 100, 130, 0.32);
 }
 
+/* Seeing-friends days — light pink, a shade brighter than the pale
+   grandparents pink so the two never read as the same colour */
+.tile.seeingfriends {
+  background: #ffb7d5;
+  box-shadow: 0 3px 0 rgba(214, 70, 140, 0.32);
+}
+
+/* Seeing friends + dad off (Sun 30 Aug) — hard pink/indigo split (the
+   👸 badge sits top-left, the 👨 badge top-right) */
+.tile.seeingfriends.dad {
+  background: linear-gradient(90deg, #ffb7d5 50%, #8fb4ff 50%);
+  box-shadow: 0 3px 0 rgba(150, 90, 170, 0.32);
+}
+
 /* Back-to-school day (2 Sept) — illustration only, no checklist */
 .tile.school {
   background: #c9e9ff;
@@ -459,6 +473,7 @@ main {
 .trip-note.cleaner-note { background: #ffe8d6; color: #a3541a; }
 .trip-note.swim-note { background: #d6f0ff; color: #1a6a9e; }
 .trip-note.friends-note { background: #f8e3d3; color: #8a4b1e; }
+.trip-note.seeingfriends-note { background: #ffe1ef; color: #a82f6b; }
 
 .checklist { list-style: none; }
 
