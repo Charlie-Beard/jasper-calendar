@@ -20,6 +20,26 @@ function dayInfo(date) {
   return { trip, types: matchDayTypes(s, date, dow) };
 }
 
+// Which calendar this page shows — set by the page (<body data-calendar>):
+// index.html is the summer, halloween.html the October half term. Summer
+// keeps the bare /api/calendar URL its cached clients already use.
+const CALENDAR_ID = document.body.dataset.calendar || 'summer';
+const CALENDAR_URL = CALENDAR_ID === 'summer' ? '/api/calendar' : `/api/calendar/${CALENDAR_ID}`;
+
+// The words that differ between calendars.
+const COPY = {
+  summer: {
+    startsIn: (n) => (n === 1 ? 'The holidays start tomorrow! 🎉' : `The holidays start in ${n} days! 🎉`),
+    over: 'What an amazing summer! 🌟',
+    dayOf: (n) => `Day ${n} of the holidays`,
+  },
+  halfterm: {
+    startsIn: (n) => (n === 1 ? 'Half term starts tomorrow! 🎃' : `Half term starts in ${n} days! 🎃`),
+    over: 'What a spooktacular half term! 👻',
+    dayOf: (n) => `Day ${n} of half term`,
+  },
+}[CALENDAR_ID];
+
 const grid = document.getElementById('grid');
 const progressEl = document.getElementById('progress');
 const offlinePill = document.getElementById('offline-pill');
@@ -138,20 +158,17 @@ function openSchoolDay() {
 
 function renderProgress() {
   if (cal.today < cal.from) {
-    const n = daysBetween(cal.today, cal.from);
-    progressEl.textContent = n === 1
-      ? 'The holidays start tomorrow! 🎉'
-      : `The holidays start in ${n} days! 🎉`;
+    progressEl.textContent = COPY.startsIn(daysBetween(cal.today, cal.from));
     return;
   }
   if (cal.today > cal.to) {
-    progressEl.textContent = 'What an amazing summer! 🌟';
+    progressEl.textContent = COPY.over;
     return;
   }
   const starDays = Object.entries(cal.days)
     .filter(([date, d]) => date <= cal.today && d.total > 0 && d.done === d.total).length;
   const dayNo = daysBetween(cal.from, cal.today) + 1;
-  progressEl.textContent = `Day ${dayNo} of the holidays — ${starDays} ⭐ so far!`;
+  progressEl.textContent = `${COPY.dayOf(dayNo)} — ${starDays} ⭐ so far!`;
 }
 
 function refreshTile(date) {
@@ -315,7 +332,7 @@ async function prefetchDays() {
 async function load() {
   let fresh;
   try {
-    fresh = await api.get('/api/calendar');
+    fresh = await api.get(CALENDAR_URL);
   } catch {
     if (!cal) {
       progressEl.textContent = 'Couldn\'t load the calendar — check the internet and refresh!';

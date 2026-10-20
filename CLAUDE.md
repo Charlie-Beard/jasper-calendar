@@ -1,7 +1,7 @@
 # Jasper Calendar — Maintainer Guide
 
-A PWA for an iPad Home Screen: a tile calendar of the 2026 school summer
-holidays. Jasper taps a day to see a checklist; parents manage activities at
+A PWA for an iPad Home Screen: tile calendars of the 2026 school holidays —
+the summer at `/`, and a spooky Halloween October half term at `/halloween`. Jasper taps a day to see a checklist; parents manage activities at
 `/admin.html`. One Cloudflare Worker serves the static app and the JSON API,
 backed by D1 (SQLite). ~2k lines total, no frameworks, no build step for the
 client. `npm test` runs the API suite; the `verify` skill
@@ -11,10 +11,11 @@ client. `npm test` runs the API suite; the `verify` skill
 
 | File | Role |
 |---|---|
-| `src/schedule.js` | **All family dates**: holiday range, trips, grandparent/Oma/rainforest days, dad-off extras, cleaner skips, school day. Served to the client inside `/api/calendar`, so editing it needs only a worker deploy — never a cache bump. |
+| `src/schedule.js` | **All family dates**, per calendar (`CALENDARS`: `summer`, `halfterm`): holiday range, trips, grandparent/Oma/rainforest days, dad-off extras, cleaner skips, school day. Served to the client inside `/api/calendar`, so editing it needs only a worker deploy — never a cache bump. |
 | `src/worker.js` | The whole backend: router, auth (HMAC token + login rate limit), kid endpoints, admin CRUD. |
 | `public/js/day-types.js` | **The day-type registry** — defines every kind of day (key, emoji, modal note, match rule, priority). Tiles and modal notes are derived entirely from this list. |
-| `public/js/calendar.js` | Kid view: grid + day modal rendering, offline handling, midnight rollover. `dayInfo(date)` is the single date→types resolver (tile and modal both use it, so they can never disagree). |
+| `public/halloween.html` | The half-term page: `<body class="spooky" data-calendar="halfterm">` + its own manifest/icons. Same calendar.js. |
+| `public/js/calendar.js` | Kid view (both pages; `data-calendar` picks the calendar and its wording in `COPY`): grid + day modal rendering, offline handling, midnight rollover. `dayInfo(date)` is the single date→types resolver (tile and modal both use it, so they can never disagree). |
 | `public/js/api.js` | Fetch wrapper; flags connection failures with `err.network` so callers can tell "offline" from "server said no". |
 | `public/js/outbox.js` | Offline ticks queued in localStorage until the server has them. |
 | `public/js/admin.js` | Parent portal (login, routine + special-day CRUD). |
@@ -22,6 +23,23 @@ client. `npm test` runs the API suite; the `verify` skill
 | `public/sw.js` | Service worker. Shell = stale-while-revalidate; `/api/*` and `/version.json` = network-first. |
 | `migrations/` | D1 schema. Add new numbered files; never edit applied ones. |
 | `test/api.test.js` | Vitest suite against the real worker + isolated D1. "Today" pinned to 2026-08-05. |
+
+## Calendars (one per school holiday)
+
+`CALENDARS` in `src/schedule.js` maps an id to `{ from, to, schedule }`.
+Ranges must never overlap: the worker resolves a date to its calendar
+(`calendarForDate`), which decides that day's routine — so `/api/day/*`,
+`day_activities` and `completions` need no calendar id at all. Each
+calendar's routine lives in `default_activities` rows with that
+`calendar` value (migration 0005).
+
+- API: `/api/calendar` = summer (kept for old cached clients),
+  `/api/calendar/<id>` = any; admin routine at `/api/admin/<id>/defaults`
+  (bare `/api/admin/defaults` = summer). The admin page has a calendar picker.
+- Adding a calendar: an entry in `CALENDARS`, a migration seeding its
+  routine, a page like `halloween.html` (+ manifest, `SHELL` entries in
+  sw.js), a `COPY` entry in calendar.js, an `<option>` + `CALENDAR_IDS`
+  entry in admin.
 
 ## Adding a new day type (the most common change)
 
@@ -106,6 +124,14 @@ keep it that way. It was once accidentally an old feature branch, which made
 every new session start from a stale snapshot and silently revert merged
 work. Session branches should be deleted after their PR merges.
 
+## Migrations are NOT applied by the deploy
+
+Workers Builds only runs `npx wrangler deploy`; D1 migrations are applied
+by hand with `npm run migrate:remote` (needs the user's Cloudflare login —
+not possible from the sandbox). When a change ships a migration the new
+worker depends on, the user must run it **just before** merging, or the
+live app errors until they do.
+
 ## Deploying — "push it" means "make it live" (learned the hard way)
 
 Live app: https://jasper-calendar.charlesjohnbeard.workers.dev/ (the
@@ -134,6 +160,12 @@ to push/ship/deploy a change, finish the job all the way to production:
 6. To roll back: `git revert` the bad commit on `main` (via a PR) and
    let the build redeploy — don't promote old versions by hand in the
    dashboard, that leaves `main` and production disagreeing.
+
+## Current schedule state (2026 October half term)
+
+Half term 2026-10-23 → 2026-11-03 (12 days), school day 2026-11-04, at
+`/halloween`. Day types: Halloween 31 Oct (🎃 pumpkin orange), plus the
+rule-based dad-off weekends and Tuesday cleaners (no exceptions listed yet).
 
 ## Current schedule state (2026 summer)
 

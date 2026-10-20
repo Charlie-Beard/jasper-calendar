@@ -1,5 +1,7 @@
-// Generates the app icons (sun + calendar-with-tick on sky blue) as PNGs
-// using only Node built-ins, so no image library is needed.
+// Generates the app icons as PNGs using only Node built-ins, so no image
+// library is needed: the summer icon (sun + calendar-with-tick on sky blue,
+// icon-*.png) and the half-term one (jack-o'-lantern under a full moon on a
+// night sky, halloween-*.png).
 // Run with: npm run icons
 
 import { deflateSync } from 'node:zlib';
@@ -79,6 +81,17 @@ function inRoundedRect(x, y, x1, y1, x2, y2, r) {
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
+function inEllipse(x, y, cx, cy, rx, ry) {
+  return ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+}
+
+function inTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
+  const s1 = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+  const s2 = (cx - bx) * (y - by) - (cy - by) * (x - bx);
+  const s3 = (ax - cx) * (y - cy) - (ay - cy) * (x - cx);
+  return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
+}
+
 const SKY_TOP = hex('#4fb6e8');
 const SKY_BOTTOM = hex('#a5ddf6');
 const SUN = hex('#ffd23e');
@@ -108,7 +121,31 @@ function pixel(x, y) {
   return c;
 }
 
-function render(size) {
+const NIGHT_TOP = hex('#1d1036');
+const NIGHT_BOTTOM = hex('#4a2a7a');
+const MOON = hex('#fff3c4');
+const PUMPKIN = hex('#ff8a1f');
+const PUMPKIN_RIB = hex('#e86f0c');
+const STEM = hex('#4f9a3a');
+const FACE = hex('#3a1a00');
+
+// The half-term icon at unit coordinates (x, y), painted back-to-front.
+function halloweenPixel(x, y) {
+  let c = lerp(NIGHT_TOP, NIGHT_BOTTOM, y);
+  if (inCircle(x, y, 0.76, 0.22, 0.12)) c = MOON;
+  if (distToSegment(x, y, 0.5, 0.33, 0.53, 0.22) <= 0.04) c = STEM;
+  // Body: an outer pair of lobes with a lighter middle lobe = pumpkin ribs.
+  if (inEllipse(x, y, 0.38, 0.6, 0.22, 0.25) || inEllipse(x, y, 0.62, 0.6, 0.22, 0.25)) c = PUMPKIN_RIB;
+  if (inEllipse(x, y, 0.5, 0.6, 0.2, 0.27)) c = PUMPKIN;
+  // A friendly face: triangle eyes and a gap-toothed smile.
+  if (inTriangle(x, y, [0.33, 0.58], [0.45, 0.58], [0.39, 0.47])
+    || inTriangle(x, y, [0.55, 0.58], [0.67, 0.58], [0.61, 0.47])) c = FACE;
+  if (inEllipse(x, y, 0.5, 0.67, 0.19, 0.11) && y >= 0.67
+    && !(Math.abs(x - 0.44) < 0.025 && y < 0.71) && !(Math.abs(x - 0.56) < 0.025 && y < 0.71)) c = FACE;
+  return c;
+}
+
+function render(size, pixel) {
   const ss = 2; // 2x supersampling for smooth edges
   const n = size * ss;
   const big = new Float64Array(n * n * 3);
@@ -135,8 +172,10 @@ function render(size) {
 }
 
 mkdirSync(OUT_DIR, { recursive: true });
-for (const size of SIZES) {
-  const file = join(OUT_DIR, `icon-${size}.png`);
-  writeFileSync(file, render(size));
-  console.log(`wrote ${file}`);
+for (const [name, painter] of [['icon', pixel], ['halloween', halloweenPixel]]) {
+  for (const size of SIZES) {
+    const file = join(OUT_DIR, `${name}-${size}.png`);
+    writeFileSync(file, render(size, painter));
+    console.log(`wrote ${file}`);
+  }
 }
