@@ -633,6 +633,20 @@ main {
   box-shadow: 0 3px 0 rgba(110, 70, 110, 0.5);
 }
 
+/* Tumblestone Hollow days — mossy brown */
+.tile.tumblestone {
+  background: #c9b48a;
+  box-shadow: 0 3px 0 rgba(110, 85, 40, 0.4);
+}
+
+/* Tumblestone + dad off (Fri 30 Oct) — hard brown/indigo split (🍂 owns
+   the left corner, the 👨 badge the right) */
+.tile.tumblestone.dad {
+  background: linear-gradient(90deg, #c9b48a 50%, #8fb4ff 50%);
+  box-shadow: 0 3px 0 rgba(90, 90, 120, 0.4);
+}
+
+.trip-note.tumblestone-note { background: #efe6d2; color: #5e4a1f; }
 .trip-note.halloween-note { background: #ffe3c7; color: #8a3f00; }
 
 /* Back-to-school tile on a night sky */

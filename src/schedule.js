@@ -63,8 +63,11 @@ export const HALF_TERM_START = '2026-10-23';
 export const HALF_TERM_END = '2026-11-01';
 
 export const HALF_TERM_SCHEDULE = {
-  // Halloween night itself.
+  // Halloween itself (31 Oct: the Hallow Trail — see the note in day-types.js).
   halloweenDays: ['2026-10-31'],
+
+  // Days out at Tumblestone Hollow (all day).
+  tumblestoneDays: ['2026-10-30'],
 
   // Swimming pool days (29 Oct: in the morning, before lunch).
   swimmingDays: ['2026-10-29'],
