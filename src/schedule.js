@@ -66,6 +66,14 @@ export const HALF_TERM_SCHEDULE = {
   // Halloween itself (31 Oct: the Hallow Trail — see the note in day-types.js).
   halloweenDays: ['2026-10-31'],
 
+  // Days Grandma and Grandpa take Jasper — or we all visit them.
+  grandparentDays: ['2026-11-01'],
+
+  // Optional extra words for one day's note, shown after its headline note.
+  dayNotes: {
+    '2026-11-01': "We're all going to visit — Marcus, Freya and Tilly will be there too!",
+  },
+
   // Days out at Tumblestone Hollow (all day).
   tumblestoneDays: ['2026-10-30'],
 

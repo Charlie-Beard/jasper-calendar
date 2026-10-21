@@ -60,6 +60,10 @@ Badges position themselves: `renderTile()` fills a top-left then a top-right
 slot, so two emojis can never overlap. Then run `npm test` and check the
 browser (reload twice — see caching below).
 
+A one-off detail for a single day (who'll be there, what time) doesn't need
+a day type: put the words in the calendar's `dayNotes` map in schedule.js —
+the modal appends them after the headline note.
+
 ## Changing schedule dates only
 
 Edit the arrays in `src/schedule.js` and deploy. Nothing else — the client
@@ -165,7 +169,8 @@ to push/ship/deploy a change, finish the job all the way to production:
 
 Half term 2026-10-23 → 2026-11-01 (10 days), school day 2026-11-02, at
 `/halloween`. Day types: Halloween 31 Oct (🎃 pumpkin orange, Hallow Trail), plus the
-dad-off weekends + extras (29–30 Oct), swimming 29 Oct (🏊), Tumblestone Hollow 30 Oct (🍂 mossy brown), and
+dad-off weekends + extras (29–30 Oct), swimming 29 Oct (🏊), Tumblestone Hollow 30 Oct (🍂 mossy brown), Grandma and Grandpa's
+1 Nov (👵👴, with a `dayNotes` extra line), and
 Tuesday cleaners.
 
 ## Current schedule state (2026 summer)

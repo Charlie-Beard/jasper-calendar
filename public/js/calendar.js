@@ -196,6 +196,8 @@ async function openDay(date) {
   const notes = [];
   if (trip) notes.push(`${trip.emoji} We're on holiday in ${trip.label}!`);
   else if (headline) notes.push(`${headline.emoji} ${headline.note}`);
+  const extra = (cal.schedule.dayNotes || {})[date];
+  if (extra) notes.push(extra);
   for (const t of types) if (t.additive) notes.push(`${t.emoji} ${t.note}`);
   modalTrip.textContent = notes.join(' ');
   // The note is tinted after whichever type leads it (trip = the base green).
