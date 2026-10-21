@@ -163,9 +163,9 @@ to push/ship/deploy a change, finish the job all the way to production:
 
 ## Current schedule state (2026 October half term)
 
-Half term 2026-10-23 → 2026-11-03 (12 days), school day 2026-11-04, at
+Half term 2026-10-23 → 2026-11-01 (10 days), school day 2026-11-02, at
 `/halloween`. Day types: Halloween 31 Oct (🎃 pumpkin orange), plus the
-rule-based dad-off weekends and Tuesday cleaners (no exceptions listed yet).
+dad-off weekends + extras (29–30 Oct), swimming 29 Oct, and Tuesday cleaners.
 
 ## Current schedule state (2026 summer)
 

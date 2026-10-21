@@ -283,6 +283,13 @@ main {
   box-shadow: 0 3px 0 rgba(120, 90, 200, 0.32);
 }
 
+/* Swimming + dad off (Thu 29 Oct) — hard blue/indigo split (🏊 owns the
+   left corner, the 👨 badge the right) */
+.tile.dad.swim {
+  background: linear-gradient(90deg, #aeddfa 50%, #8fb4ff 50%);
+  box-shadow: 0 3px 0 rgba(60, 110, 190, 0.32);
+}
+
 /* Living Rainforest days */
 .tile.rainforest {
   background: #bfe89f;

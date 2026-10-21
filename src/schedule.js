@@ -60,20 +60,23 @@ export const SCHEDULE = {
 
 // October half term — the spooky Halloween calendar at /halloween.
 export const HALF_TERM_START = '2026-10-23';
-export const HALF_TERM_END = '2026-11-03';
+export const HALF_TERM_END = '2026-11-01';
 
 export const HALF_TERM_SCHEDULE = {
   // Halloween night itself.
   halloweenDays: ['2026-10-31'],
 
+  // Swimming pool days (29 Oct: in the morning, before lunch).
+  swimmingDays: ['2026-10-29'],
+
   // Same rule-based fields as the summer (dad off at weekends, cleaners on
   // Tuesdays) — list any half-term exceptions here.
-  dadOffExtra: [],
+  dadOffExtra: ['2026-10-29', '2026-10-30'],
   dadOffSkip: [],
   cleanerSkip: [],
 
   // The day after half term — no tasks, just the big moment.
-  schoolDay: '2026-11-04',
+  schoolDay: '2026-11-02',
 };
 
 // Every calendar the app serves, keyed by id. The id is used in the API

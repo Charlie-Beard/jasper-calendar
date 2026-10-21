@@ -217,10 +217,10 @@ describe('half-term calendar', () => {
     expect(res.status).toBe(200);
     const cal = await res.json();
     expect(cal.from).toBe('2026-10-23');
-    expect(cal.to).toBe('2026-11-03');
-    expect(Object.keys(cal.days)).toHaveLength(12);
+    expect(cal.to).toBe('2026-11-01');
+    expect(Object.keys(cal.days)).toHaveLength(10);
     expect(cal.days[HT_DAY]).toEqual({ total: 10, done: 0, hasSpecial: false });
-    expect(cal.schedule.schoolDay).toBe('2026-11-04');
+    expect(cal.schedule.schoolDay).toBe('2026-11-02');
     expect(cal.schedule.halloweenDays).toContain('2026-10-31');
   });
 
