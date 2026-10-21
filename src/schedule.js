@@ -74,6 +74,9 @@ export const HALF_TERM_SCHEDULE = {
     '2026-11-01': "We're all going to visit — Marcus, Freya and Tilly will be there too!",
   },
 
+  // Camp Mohawk (26 Oct: in the morning).
+  campDays: ['2026-10-26'],
+
   // Days out at Tumblestone Hollow (all day).
   tumblestoneDays: ['2026-10-30'],
 

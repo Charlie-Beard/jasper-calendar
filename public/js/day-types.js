@@ -68,6 +68,12 @@ export const DAY_TYPES = [
     dates: 'friendsDays',
   },
   {
+    key: 'camp',
+    emoji: '🏕️',
+    note: "You're off to Camp Mohawk this morning!",
+    dates: 'campDays',
+  },
+  {
     key: 'tumblestone',
     emoji: '🍂',
     note: "You're off to Tumblestone Hollow today!",

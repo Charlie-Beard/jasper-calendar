@@ -633,6 +633,14 @@ main {
   box-shadow: 0 3px 0 rgba(110, 70, 110, 0.5);
 }
 
+/* Camp Mohawk days — warm red, a colour no other day type uses */
+.tile.camp {
+  background: #f4a09a;
+  box-shadow: 0 3px 0 rgba(170, 50, 40, 0.38);
+}
+
+.trip-note.camp-note { background: #fde3e0; color: #9a2f24; }
+
 /* Tumblestone Hollow days — mossy brown */
 .tile.tumblestone {
   background: #c9b48a;
