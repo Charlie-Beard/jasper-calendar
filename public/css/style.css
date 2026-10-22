@@ -171,15 +171,23 @@ main {
   position: absolute;
   top: 4px;
   right: 6px;
-  font-size: clamp(0.7rem, 2vw, 1rem);
+  font-size: var(--badge-size);
 }
 
 /* Badge slots — calendar.js renderTile() fills at most one top-left and one
-   top-right badge per tile, so two emojis can never overlap. */
+   top-right badge per tile, so two emojis can never overlap. Sized so three
+   emojis (e.g. 👵👴 + 👨) still fit across one tile. */
+.tile { --badge-size: clamp(0.85rem, 3vw, 1.6rem); }
+
+/* Nudge the number and labels down below the badge row so big badges never
+   sit on top of them (the blank lead-in cells have no content to move). */
+.tile:not(.blank) { padding-top: calc(var(--badge-size) * 0.6 + 4px); }
+
 .badge-left, .badge-right {
   position: absolute;
   top: 4px;
-  font-size: clamp(0.7rem, 2vw, 1rem);
+  font-size: var(--badge-size);
+  line-height: 1;
 }
 
 .badge-left { left: 6px; }
@@ -187,7 +195,7 @@ main {
 
 /* The 🎉 special badge lives top-right too — shift it along when a day
    badge already occupies that corner. */
-.badge-right ~ .special { right: calc(6px + 1.6em); }
+.badge-right ~ .special { right: calc(6px + 1.3em); }
 
 /* --- Day-type tile colours + modal note tints ---
    One solid `.tile.<key>` block colour and one `.<key>-note` tint per entry
@@ -373,6 +381,10 @@ main {
   }
 
   .tile.today { outline-width: 3px; }
+
+  /* Phone tiles are ~50px wide: keep badges small enough for three to fit */
+  .tile { --badge-size: 0.7rem; }
+  .tile:not(.blank) { padding-top: 4px; }
 
   .badge-left { top: 2px; left: 3px; }
   .badge-right, .tile .special { top: 2px; right: 3px; }
