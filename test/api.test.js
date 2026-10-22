@@ -208,3 +208,76 @@ describe('reorder', () => {
     expect(after.items.map((i) => i.id)).toEqual(reversed);
   });
 });
+
+describe('half-term calendar', () => {
+  const HT_DAY = '2026-10-26';
+
+  it('serves its own range, routine size and schedule', async () => {
+    const res = await call('/api/calendar/halfterm');
+    expect(res.status).toBe(200);
+    const cal = await res.json();
+    expect(cal.from).toBe('2026-10-23');
+    expect(cal.to).toBe('2026-11-01');
+    expect(Object.keys(cal.days)).toHaveLength(10);
+    expect(cal.days[HT_DAY]).toEqual({ total: 10, done: 0, hasSpecial: false });
+    expect(cal.schedule.schoolDay).toBe('2026-11-02');
+    expect(cal.schedule.halloweenDays).toContain('2026-10-31');
+  });
+
+  it('keeps /api/calendar as the summer calendar and 404s unknown ids', async () => {
+    expect((await (await call('/api/calendar/summer')).json()).from).toBe('2026-07-23');
+    expect((await (await call('/api/calendar')).json()).from).toBe('2026-07-23');
+    expect((await call('/api/calendar/nope')).status).toBe(404);
+    expect((await call('/api/calendar/toString')).status).toBe(404);
+  });
+
+  it('gives half-term days their own routine (no sun cream in October)', async () => {
+    const summer = await (await call(`/api/day/${TODAY}`)).json();
+    const ht = await (await call(`/api/day/${HT_DAY}`)).json();
+    expect(ht.items).toHaveLength(10);
+    expect(ht.items.some((i) => i.title.includes('Sun Cream'))).toBe(false);
+    const summerIds = new Set(summer.items.map((i) => i.id));
+    expect(ht.items.some((i) => summerIds.has(i.id))).toBe(false);
+  });
+
+  it('rejects dates between the two calendars', async () => {
+    expect((await call('/api/day/2026-09-15')).status).toBe(400);
+  });
+
+  it("won't tick one calendar's routine item on the other calendar's day", async () => {
+    const ht = await (await call(`/api/day/${HT_DAY}`)).json();
+    expect((await call(`/api/day/${TODAY}/toggle`, {
+      method: 'POST', body: { type: 'default', id: ht.items[0].id, done: true },
+    })).status).toBe(404);
+  });
+
+  it('manages the half-term routine separately from the summer one', async () => {
+    const token = await adminToken();
+    const added = await call('/api/admin/halfterm/defaults', {
+      method: 'POST', token, body: { title: '🎃 Carve pumpkin' },
+    });
+    expect(added.status).toBe(201);
+    const { id } = await added.json();
+
+    const ht = await (await call('/api/admin/halfterm/defaults', { token })).json();
+    expect(ht.items.at(-1)).toMatchObject({ id, title: '🎃 Carve pumpkin' });
+    const summer = await (await call('/api/admin/defaults', { token })).json();
+    expect(summer.items.find((i) => i.id === id)).toBeUndefined();
+
+    // Scoped: the summer routes can't touch a half-term item, and vice versa.
+    expect((await call(`/api/admin/defaults/${id}`, { method: 'DELETE', token })).status).toBe(404);
+    expect((await call(`/api/admin/halfterm/defaults/${summer.items[0].id}`, {
+      method: 'PUT', token, body: { title: 'x' },
+    })).status).toBe(404);
+    expect((await call(`/api/admin/halfterm/defaults/${id}`, { method: 'DELETE', token })).status).toBe(200);
+  });
+
+  it('allows special activities on half-term days', async () => {
+    const token = await adminToken();
+    expect((await call('/api/admin/day/2026-10-31/activities', {
+      method: 'POST', token, body: { title: 'Trick or treat' },
+    })).status).toBe(201);
+    const cal = await (await call('/api/calendar/halfterm')).json();
+    expect(cal.days['2026-10-31']).toMatchObject({ total: 11, hasSpecial: true });
+  });
+});

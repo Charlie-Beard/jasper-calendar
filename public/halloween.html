@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jasper's Spooky Half Term</title>
+  <meta name="theme-color" content="#2a1748">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jasper's Half Term">
+  <link rel="manifest" href="/halloween.webmanifest">
+  <link rel="icon" href="/icons/halloween-192.png">
+  <link rel="apple-touch-icon" href="/icons/halloween-180.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="spooky" data-calendar="halfterm">
+  <!-- Friendly spooky decorations: purely visual, ignored by screen readers -->
+  <div class="spooky-sky" aria-hidden="true">
+    <span class="moon">🌕</span>
+    <span class="bat bat-1">🦇</span>
+    <span class="bat bat-2">🦇</span>
+    <span class="ghost">👻</span>
+  </div>
+
+  <header class="app-header">
+    <h1>Jasper's Spooky Half Term 🎃</h1>
+    <p class="spooky-row" aria-hidden="true">🕸️ 🍬 🎃 🍬 🕸️</p>
+    <p id="progress" class="progress-line"></p>
+    <p id="offline-pill" class="offline-pill hidden" role="status"></p>
+  </header>
+
+  <main>
+    <div class="weekdays" aria-hidden="true">
+      <span><b class="wd-full">Monday</b><b class="wd-short">Mon</b></span>
+      <span><b class="wd-full">Tuesday</b><b class="wd-short">Tue</b></span>
+      <span><b class="wd-full">Wednesday</b><b class="wd-short">Wed</b></span>
+      <span><b class="wd-full">Thursday</b><b class="wd-short">Thu</b></span>
+      <span><b class="wd-full">Friday</b><b class="wd-short">Fri</b></span>
+      <span><b class="wd-full">Saturday</b><b class="wd-short">Sat</b></span>
+      <span><b class="wd-full">Sunday</b><b class="wd-short">Sun</b></span>
+    </div>
+    <div id="grid" class="grid" role="group" aria-label="Half term calendar"></div>
+  </main>
+
+  <footer class="version-footer"><span id="version-footer"></span></footer>
+
+  <div id="modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title"></h2>
+        <button id="modal-close" class="close-btn" aria-label="Close">✕</button>
+      </div>
+      <p id="modal-trip" class="modal-note trip-note hidden"></p>
+      <p id="modal-note" class="modal-note hidden"></p>
+      <ul id="modal-list" class="checklist"></ul>
+    </div>
+  </div>
+
+  <script type="module" src="/js/calendar.js"></script>
+  <script type="module" src="/js/version.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin — Jasper's Summer Holidays</title>
+  <title>Admin — Jasper's Calendars</title>
   <meta name="theme-color" content="#4fb6e8">
   <link rel="icon" href="/icons/icon-192.png">
   <link rel="stylesheet" href="/css/style.css">
@@ -11,7 +11,7 @@
 <body class="admin">
   <header class="app-header">
     <h1>Parent Admin 🛠️</h1>
-    <p class="progress-line"><a href="/">← Back to Jasper's calendar</a></p>
+    <p class="progress-line"><a href="/">← Summer calendar</a> · <a href="/halloween">Half-term calendar 🎃</a></p>
   </header>
 
   <main>
@@ -25,6 +25,17 @@
     </section>
 
     <div id="portal" class="hidden">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Calendar</h2>
+          <p class="hint">Each holiday has its own routine and special days.</p>
+        </div>
+        <select id="calendar-pick" class="date-picker">
+          <option value="summer">☀️ Summer holidays</option>
+          <option value="halfterm">🎃 October half term</option>
+        </select>
+      </section>
+
       <section class="panel">
         <div class="panel-head">
           <h2>Daily routine</h2>

@@ -68,6 +68,24 @@ export const DAY_TYPES = [
     dates: 'friendsDays',
   },
   {
+    key: 'camp',
+    emoji: '🏕️',
+    note: "You're off to Camp Mohawk this morning!",
+    dates: 'campDays',
+  },
+  {
+    key: 'tumblestone',
+    emoji: '🍂',
+    note: "You're off to Tumblestone Hollow today!",
+    dates: 'tumblestoneDays',
+  },
+  {
+    key: 'halloween',
+    emoji: '🎃',
+    note: "Happy Halloween, Jasper! You're doing the Hallow Trail today!",
+    dates: 'halloweenDays',
+  },
+  {
     key: 'dad',
     emoji: '👨',
     side: 'right',

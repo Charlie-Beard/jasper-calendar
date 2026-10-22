@@ -9,8 +9,11 @@ const defaultsAdd = document.getElementById('defaults-add');
 const specialDate = document.getElementById('special-date');
 const specialList = document.getElementById('special-list');
 const specialAdd = document.getElementById('special-add');
+const calendarPick = document.getElementById('calendar-pick');
 
-let range = null; // { from, to } from /api/calendar
+// Ids match CALENDARS in src/schedule.js (and the <option>s in admin.html).
+const CALENDAR_IDS = ['summer', 'halfterm'];
+const ranges = {}; // calendar id -> { from, to, today } from /api/calendar/<id>
 
 function showLogin() {
   clearToken();
@@ -39,7 +42,7 @@ async function guarded(fn) {
 
 function basePath(listEl) {
   return listEl === defaultsList
-    ? '/api/admin/defaults'
+    ? `/api/admin/${calendarPick.value}/defaults`
     : `/api/admin/day/${specialDate.value}/activities`;
 }
 
@@ -114,6 +117,10 @@ function wireAddForm(form, listEl) {
 wireAddForm(defaultsAdd, defaultsList);
 wireAddForm(specialAdd, specialList);
 specialDate.addEventListener('change', () => refresh(specialList));
+calendarPick.addEventListener('change', () => {
+  pointDatePicker();
+  if (getToken()) loadPortal();
+});
 
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -139,8 +146,9 @@ async function loadPortal() {
   refresh(specialList);
 }
 
-async function boot() {
-  range = await api.get('/api/calendar').catch(() => null);
+// Limit the special-day picker to the chosen calendar's dates.
+function pointDatePicker() {
+  const range = ranges[calendarPick.value];
   if (range) {
     specialDate.min = range.from;
     specialDate.max = range.to;
@@ -152,6 +160,17 @@ async function boot() {
     specialDate.value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' })
       .format(new Date());
   }
+}
+
+async function boot() {
+  await Promise.all(CALENDAR_IDS.map(async (id) => {
+    ranges[id] = await api.get(`/api/calendar/${id}`).catch(() => null);
+  }));
+  // Start on the calendar that's on now or coming up next.
+  const today = Object.values(ranges).find(Boolean)?.today;
+  calendarPick.value = CALENDAR_IDS.find((id) => ranges[id] && today <= ranges[id].to)
+    || CALENDAR_IDS.at(-1);
+  pointDatePicker();
   if (getToken()) {
     showPortal();
     loadPortal();

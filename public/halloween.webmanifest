@@ -1,0 +1,15 @@
+{
+  "name": "Jasper's Spooky Half Term",
+  "short_name": "Jasper's Half Term",
+  "description": "Jasper's Halloween half-term calendar and daily plan",
+  "id": "/halloween",
+  "start_url": "/halloween",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1d1036",
+  "theme_color": "#2a1748",
+  "icons": [
+    { "src": "/icons/halloween-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/halloween-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

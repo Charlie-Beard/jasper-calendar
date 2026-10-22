@@ -2,7 +2,11 @@
 // it's served by the Worker inside /api/calendar, which is always network-first).
 // Dates are 'YYYY-MM-DD'.
 
-// The calendar's first and last day (inclusive).
+// There is one calendar per school holiday (see CALENDARS at the bottom).
+// Their date ranges must not overlap: a date alone decides which calendar —
+// and so which daily routine — it belongs to.
+
+// The summer calendar's first and last day (inclusive).
 export const HOLIDAY_START = '2026-07-23';
 export const HOLIDAY_END = '2026-09-01';
 
@@ -52,4 +56,47 @@ export const SCHEDULE = {
 
   // The day after the holidays — no tasks, just the big moment.
   schoolDay: '2026-09-02',
+};
+
+// October half term — the spooky Halloween calendar at /halloween.
+export const HALF_TERM_START = '2026-10-23';
+export const HALF_TERM_END = '2026-11-01';
+
+export const HALF_TERM_SCHEDULE = {
+  // Halloween itself (31 Oct: the Hallow Trail — see the note in day-types.js).
+  halloweenDays: ['2026-10-31'],
+
+  // Days Grandma and Grandpa take Jasper — or we all visit them.
+  grandparentDays: ['2026-11-01'],
+
+  // Optional extra words for one day's note, shown after its headline note.
+  dayNotes: {
+    '2026-11-01': "We're all going to visit — Marcus, Freya and Tilly will be there too!",
+  },
+
+  // Camp Mohawk (26 Oct: in the morning).
+  campDays: ['2026-10-26'],
+
+  // Days out at Tumblestone Hollow (all day).
+  tumblestoneDays: ['2026-10-30'],
+
+  // Swimming pool days (29 Oct: in the morning, before lunch).
+  swimmingDays: ['2026-10-29'],
+
+  // Same rule-based fields as the summer (dad off at weekends, cleaners on
+  // Tuesdays) — list any half-term exceptions here.
+  dadOffExtra: ['2026-10-29', '2026-10-30'],
+  dadOffSkip: [],
+  cleanerSkip: [],
+
+  // The day after half term — no tasks, just the big moment.
+  schoolDay: '2026-11-02',
+};
+
+// Every calendar the app serves, keyed by id. The id is used in the API
+// (/api/calendar/<id>, /api/admin/<id>/defaults) and in the
+// default_activities.calendar column, which holds each calendar's routine.
+export const CALENDARS = {
+  summer: { from: HOLIDAY_START, to: HOLIDAY_END, schedule: SCHEDULE },
+  halfterm: { from: HALF_TERM_START, to: HALF_TERM_END, schedule: HALF_TERM_SCHEDULE },
 };

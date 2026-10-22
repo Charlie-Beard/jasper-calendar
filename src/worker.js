@@ -1,6 +1,6 @@
 // Jasper's holiday calendar — Cloudflare Worker: JSON API + static assets.
 
-import { SCHEDULE, HOLIDAY_START, HOLIDAY_END } from './schedule.js';
+import { CALENDARS } from './schedule.js';
 
 const TOKEN_LIFETIME_MS = 90 * 24 * 60 * 60 * 1000; // ~90 days, lasts the summer
 
@@ -24,8 +24,18 @@ function todayISO(env) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
 }
 
+// The id of the calendar (summer, halfterm, …) a date falls in, or null.
+// Calendar ranges never overlap, so a date has at most one.
+function calendarForDate(date) {
+  if (!DATE_RE.test(date)) return null;
+  for (const [id, c] of Object.entries(CALENDARS)) {
+    if (date >= c.from && date <= c.to) return id;
+  }
+  return null;
+}
+
 function isValidDate(date) {
-  return DATE_RE.test(date) && date >= HOLIDAY_START && date <= HOLIDAY_END;
+  return calendarForDate(date) !== null;
 }
 
 // --- Auth: HMAC-SHA-256 signed expiring token ---
@@ -96,9 +106,10 @@ async function requireAdmin(env, request) {
 
 // --- Kid endpoints ---
 
-async function getCalendar(env) {
+async function getCalendar(env, calendarId) {
+  const { from, to, schedule } = CALENDARS[calendarId];
   const [defaults, extras, done] = await env.DB.batch([
-    env.DB.prepare('SELECT COUNT(*) AS n FROM default_activities'),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM default_activities WHERE calendar = ?').bind(calendarId),
     env.DB.prepare('SELECT date, COUNT(*) AS n FROM day_activities GROUP BY date'),
     env.DB.prepare('SELECT date, COUNT(*) AS n FROM completions GROUP BY date'),
   ]);
@@ -107,9 +118,9 @@ async function getCalendar(env) {
   const doneByDate = Object.fromEntries(done.results.map((r) => [r.date, r.n]));
 
   const days = {};
-  for (let d = new Date(`${HOLIDAY_START}T12:00:00Z`); ; d.setUTCDate(d.getUTCDate() + 1)) {
+  for (let d = new Date(`${from}T12:00:00Z`); ; d.setUTCDate(d.getUTCDate() + 1)) {
     const date = d.toISOString().slice(0, 10);
-    if (date > HOLIDAY_END) break;
+    if (date > to) break;
     const special = extrasByDate[date] || 0;
     days[date] = {
       // Deliberate trade-off: `total` uses the CURRENT default routine for
@@ -121,12 +132,13 @@ async function getCalendar(env) {
       hasSpecial: special > 0,
     };
   }
-  return json({ from: HOLIDAY_START, to: HOLIDAY_END, today: todayISO(env), days, schedule: SCHEDULE });
+  return json({ from, to, today: todayISO(env), days, schedule });
 }
 
 async function getDay(env, date) {
   const [defaults, extras, done] = await env.DB.batch([
-    env.DB.prepare('SELECT id, title FROM default_activities ORDER BY sort_order'),
+    env.DB.prepare('SELECT id, title FROM default_activities WHERE calendar = ? ORDER BY sort_order')
+      .bind(calendarForDate(date)),
     env.DB.prepare('SELECT id, title FROM day_activities WHERE date = ? ORDER BY sort_order').bind(date),
     env.DB.prepare('SELECT activity_type, activity_id FROM completions WHERE date = ?').bind(date),
   ]);
@@ -151,7 +163,8 @@ async function toggleItem(env, date, request) {
     return error('Expected { type: "default"|"day", id, done }', 400);
   }
   const exists = type === 'default'
-    ? await env.DB.prepare('SELECT 1 FROM default_activities WHERE id = ?').bind(id).first()
+    ? await env.DB.prepare('SELECT 1 FROM default_activities WHERE id = ? AND calendar = ?')
+      .bind(id, calendarForDate(date)).first()
     : await env.DB.prepare('SELECT 1 FROM day_activities WHERE id = ? AND date = ?').bind(id, date).first();
   if (!exists) return error('No such activity', 404);
 
@@ -169,17 +182,18 @@ async function toggleItem(env, date, request) {
 
 // --- Admin endpoints ---
 // Defaults and per-day extras share the same CRUD shape; `scope` abstracts the
-// table and the extra date column/filter.
+// table and the extra filter column (a calendar's routine, or a date's extras).
 
-function scopeFor(date) {
+function scopeFor(date, calendarId = 'summer') {
   if (date === null) {
     return {
       table: 'default_activities',
-      where: '',
-      bindWhere: [],
+      where: ' AND calendar = ?',
+      bindWhere: [calendarId],
       completionType: 'default',
       insert: (env, title, order) =>
-        env.DB.prepare('INSERT INTO default_activities (title, sort_order) VALUES (?, ?)').bind(title, order),
+        env.DB.prepare('INSERT INTO default_activities (title, sort_order, calendar) VALUES (?, ?, ?)')
+          .bind(title, order, calendarId),
     };
   }
   return {
@@ -301,8 +315,12 @@ async function handleAdmin(env, request, segments) {
   let scope;
   let rest;
   if (segments[0] === 'defaults') {
+    // Bare /defaults is the summer routine (what the admin page always used).
     scope = scopeFor(null);
     rest = segments.slice(1);
+  } else if (Object.hasOwn(CALENDARS, segments[0]) && segments[1] === 'defaults') {
+    scope = scopeFor(null, segments[0]);
+    rest = segments.slice(2);
   } else if (segments[0] === 'day' && segments[2] === 'activities') {
     const date = segments[1];
     if (!isValidDate(date)) return error('Date must be within the holidays', 400);
@@ -338,8 +356,14 @@ export default {
 
     const segments = url.pathname.slice(5).split('/').filter(Boolean);
     try {
-      if (segments[0] === 'calendar' && segments.length === 1 && request.method === 'GET') {
-        return await getCalendar(env);
+      // /api/calendar is the summer calendar (old cached clients ask for it
+      // by that URL); /api/calendar/<id> is any calendar in CALENDARS.
+      if (segments[0] === 'calendar' && request.method === 'GET') {
+        if (segments.length === 1) return await getCalendar(env, 'summer');
+        if (segments.length === 2 && Object.hasOwn(CALENDARS, segments[1])) {
+          return await getCalendar(env, segments[1]);
+        }
+        return error('No such calendar', 404);
       }
       if (segments[0] === 'day' && segments.length >= 2) {
         const date = segments[1];
