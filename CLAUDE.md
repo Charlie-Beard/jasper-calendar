@@ -60,6 +60,11 @@ Badges position themselves: `renderTile()` fills a top-left then a top-right
 slot, so two emojis can never overlap. Then run `npm test` and check the
 browser (reload twice — see caching below).
 
+A day's own plan (outings, chores) goes in as special activities via the
+admin page, not code. Each can be placed in the routine ("After 👕 Get
+Changed") — `day_activities.after_default` (migration 0006); unplaced ones
+come after Bed. Titles that start with an emoji show without the 🎉 marker.
+
 A one-off detail for a single day (who'll be there, what time) doesn't need
 a day type: put the words in the calendar's `dayNotes` map in schedule.js —
 the modal appends them after the headline note.

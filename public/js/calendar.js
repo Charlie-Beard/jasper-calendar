@@ -248,7 +248,9 @@ function renderItem(date, item, locked) {
   box.disabled = locked;
   const text = document.createElement('span');
   text.className = 'check-title';
-  text.textContent = item.type === 'day' ? `🎉 ${item.title}` : item.title;
+  // A day activity gets a 🎉 marker unless it already leads with its own emoji.
+  text.textContent = item.type === 'day' && !/^\p{Extended_Pictographic}/u.test(item.title)
+    ? `🎉 ${item.title}` : item.title;
   label.append(box, text);
   li.appendChild(label);
 
