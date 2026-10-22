@@ -569,6 +569,19 @@ main {
 
 .row-btn { min-width: 44px; padding: 8px; }
 
+/* Special-day rows: where the activity sits in the routine */
+.admin-row { flex-wrap: wrap; }
+.place-picker {
+  font-family: inherit;
+  font-size: 1rem;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 2px solid #d7e6f1;
+  border-radius: 10px;
+  background: white;
+}
+
 .add-form { display: flex; gap: 8px; margin-top: 10px; }
 
 .add-form input, .date-picker {

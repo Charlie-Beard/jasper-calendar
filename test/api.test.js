@@ -281,3 +281,59 @@ describe('half-term calendar', () => {
     expect(cal.days['2026-10-31']).toMatchObject({ total: 11, hasSpecial: true });
   });
 });
+
+describe('placing day activities in the routine', () => {
+  const DAY = '2026-10-23';
+
+  it('slots an anchored activity straight after its routine item; others go last', async () => {
+    const token = await adminToken();
+    const { items: routine } = await (await call('/api/admin/halfterm/defaults', { token })).json();
+    const add = async (title) => (await (await call(`/api/admin/day/${DAY}/activities`, {
+      method: 'POST', token, body: { title },
+    })).json()).id;
+    const choc = await add('☕ Hot chocolate');
+    const ducks = await add('🦆 Ducks');
+    const late = await add('Unplaced');
+    const anchor = routine[4].id; // 👕 Get Changed
+    for (const id of [choc, ducks]) {
+      expect((await call(`/api/admin/day/${DAY}/activities/${id}`, {
+        method: 'PUT', token, body: { after_default: anchor },
+      })).status).toBe(200);
+    }
+
+    let { items } = await (await call(`/api/day/${DAY}`)).json();
+    let ids = items.map((i) => `${i.type}:${i.id}`);
+    expect(ids.slice(4, 7)).toEqual([`default:${anchor}`, `day:${choc}`, `day:${ducks}`]);
+    expect(ids.at(-1)).toBe(`day:${late}`);
+    expect(items).toHaveLength(13);
+
+    // The admin list reports the placement; null puts it back among the
+    // end-of-day activities (in their own sort order).
+    const listed = (await (await call(`/api/admin/day/${DAY}/activities`, { token })).json()).items;
+    expect(listed.find((i) => i.id === choc).after_default).toBe(anchor);
+    await call(`/api/admin/day/${DAY}/activities/${choc}`, { method: 'PUT', token, body: { after_default: null } });
+    ({ items } = await (await call(`/api/day/${DAY}`)).json());
+    expect(items.slice(-2).map((i) => i.id)).toEqual([choc, late]);
+
+    // Deleting the anchor drops its activities to the end instead of losing them.
+    await call(`/api/admin/halfterm/defaults/${anchor}`, { method: 'DELETE', token });
+    ({ items } = await (await call(`/api/day/${DAY}`)).json());
+    ids = items.map((i) => `${i.type}:${i.id}`);
+    expect(ids.slice(-3)).toEqual([`day:${choc}`, `day:${ducks}`, `day:${late}`]);
+  });
+
+  it("rejects anchors outside the day's calendar routine, and on routine items", async () => {
+    const token = await adminToken();
+    const { id } = await (await call(`/api/admin/day/${DAY}/activities`, {
+      method: 'POST', token, body: { title: 'x' },
+    })).json();
+    const { items: summer } = await (await call('/api/admin/defaults', { token })).json();
+    const put = (body) => call(`/api/admin/day/${DAY}/activities/${id}`, { method: 'PUT', token, body });
+    expect((await put({ after_default: summer[0].id })).status).toBe(400);
+    expect((await put({ after_default: 'nope' })).status).toBe(400);
+    expect((await put({})).status).toBe(400);
+    expect((await call(`/api/admin/defaults/${summer[0].id}`, {
+      method: 'PUT', token, body: { after_default: null },
+    })).status).toBe(400);
+  });
+});

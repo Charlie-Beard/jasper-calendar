@@ -139,13 +139,31 @@ async function getDay(env, date) {
   const [defaults, extras, done] = await env.DB.batch([
     env.DB.prepare('SELECT id, title FROM default_activities WHERE calendar = ? ORDER BY sort_order')
       .bind(calendarForDate(date)),
-    env.DB.prepare('SELECT id, title FROM day_activities WHERE date = ? ORDER BY sort_order').bind(date),
+    // SELECT *: after_default arrives with migration 0006; until it's
+    // applied every activity simply lands at the end, as before.
+    env.DB.prepare('SELECT * FROM day_activities WHERE date = ? ORDER BY sort_order').bind(date),
     env.DB.prepare('SELECT activity_type, activity_id FROM completions WHERE date = ?').bind(date),
   ]);
   const doneSet = new Set(done.results.map((r) => `${r.activity_type}:${r.activity_id}`));
+  const item = (type, r) => ({ type, id: r.id, title: r.title, done: doneSet.has(`${type}:${r.id}`) });
+
+  // A day activity sits straight after the routine item it's anchored to
+  // (after_default); unanchored ones — or ones whose anchor was deleted —
+  // go at the end of the day.
+  const defaultIds = new Set(defaults.results.map((r) => r.id));
+  const after = new Map();
+  const tail = [];
+  for (const r of extras.results) {
+    if (defaultIds.has(r.after_default)) {
+      if (!after.has(r.after_default)) after.set(r.after_default, []);
+      after.get(r.after_default).push(r);
+    } else {
+      tail.push(r);
+    }
+  }
   const items = [
-    ...defaults.results.map((r) => ({ type: 'default', id: r.id, title: r.title, done: doneSet.has(`default:${r.id}`) })),
-    ...extras.results.map((r) => ({ type: 'day', id: r.id, title: r.title, done: doneSet.has(`day:${r.id}`) })),
+    ...defaults.results.flatMap((d) => [item('default', d), ...(after.get(d.id) || []).map((r) => item('day', r))]),
+    ...tail.map((r) => item('day', r)),
   ];
   return json({ date, today: todayISO(env), items });
 }
@@ -191,6 +209,7 @@ function scopeFor(date, calendarId = 'summer') {
       where: ' AND calendar = ?',
       bindWhere: [calendarId],
       completionType: 'default',
+      placeCalendar: null,
       insert: (env, title, order) =>
         env.DB.prepare('INSERT INTO default_activities (title, sort_order, calendar) VALUES (?, ?, ?)')
           .bind(title, order, calendarId),
@@ -201,6 +220,8 @@ function scopeFor(date, calendarId = 'summer') {
     where: ' AND date = ?',
     bindWhere: [date],
     completionType: 'day',
+    // Day activities can be placed after one of this calendar's routine items.
+    placeCalendar: calendarForDate(date),
     insert: (env, title, order) =>
       env.DB.prepare('INSERT INTO day_activities (date, title, sort_order) VALUES (?, ?, ?)').bind(date, title, order),
   };
@@ -208,7 +229,7 @@ function scopeFor(date, calendarId = 'summer') {
 
 async function listActivities(env, scope) {
   const rows = await env.DB.prepare(
-    `SELECT id, title, sort_order FROM ${scope.table} WHERE 1=1${scope.where} ORDER BY sort_order`,
+    `SELECT * FROM ${scope.table} WHERE 1=1${scope.where} ORDER BY sort_order`,
   ).bind(...scope.bindWhere).all();
   return json({ items: rows.results });
 }
@@ -224,13 +245,34 @@ async function addActivity(env, scope, request) {
   return json({ id: result.meta.last_row_id, title, sort_order: max.m + 1 }, 201);
 }
 
+// Body: { title } to rename, and/or (day activities only) { after_default }
+// — a routine item id from the date's calendar, or null for end of day.
 async function updateActivity(env, scope, id, request) {
   const body = await request.json().catch(() => null);
-  const title = typeof body?.title === 'string' ? body.title.trim() : '';
-  if (!title) return error('Title is required', 400);
+  const sets = [];
+  const binds = [];
+  if (body?.title !== undefined) {
+    const title = typeof body.title === 'string' ? body.title.trim() : '';
+    if (!title) return error('Title is required', 400);
+    sets.push('title = ?');
+    binds.push(title);
+  }
+  if (body && 'after_default' in body) {
+    if (!scope.placeCalendar) return error('Only day activities can be placed in the routine', 400);
+    const anchor = body.after_default;
+    if (anchor !== null) {
+      const ok = Number.isInteger(anchor) && await env.DB.prepare(
+        'SELECT 1 FROM default_activities WHERE id = ? AND calendar = ?',
+      ).bind(anchor, scope.placeCalendar).first();
+      if (!ok) return error("after_default must be one of this day's routine items", 400);
+    }
+    sets.push('after_default = ?');
+    binds.push(anchor);
+  }
+  if (sets.length === 0) return error('Title is required', 400);
   const result = await env.DB.prepare(
-    `UPDATE ${scope.table} SET title = ? WHERE id = ?${scope.where}`,
-  ).bind(title, id, ...scope.bindWhere).run();
+    `UPDATE ${scope.table} SET ${sets.join(', ')} WHERE id = ?${scope.where}`,
+  ).bind(...binds, id, ...scope.bindWhere).run();
   if (result.meta.changes === 0) return error('No such activity', 404);
   return json({ ok: true });
 }

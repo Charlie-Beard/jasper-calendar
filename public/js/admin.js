@@ -46,9 +46,16 @@ function basePath(listEl) {
     : `/api/admin/day/${specialDate.value}/activities`;
 }
 
+// The chosen calendar's routine, for placing special activities within it.
+let routine = [];
+
 async function refresh(listEl) {
-  const data = await guarded(() => api.get(basePath(listEl)));
+  const [data, defaults] = await Promise.all([
+    guarded(() => api.get(basePath(listEl))),
+    listEl === specialList ? guarded(() => api.get(basePath(defaultsList))) : null,
+  ]);
   if (!data) return;
+  if (defaults) routine = defaults.items;
   listEl.innerHTML = '';
   data.items.forEach((item, i) => listEl.appendChild(renderRow(listEl, data.items, item, i)));
   if (data.items.length === 0) {
@@ -77,8 +84,28 @@ function renderRow(listEl, items, item, index) {
     refresh(listEl);
   });
 
-  li.append(up, down, title, edit, del);
+  li.append(up, down, title);
+  if (listEl === specialList) li.append(placePicker(item));
+  li.append(edit, del);
   return li;
+}
+
+// "Comes after …" — where this activity sits in the day's checklist.
+function placePicker(item) {
+  const select = document.createElement('select');
+  select.className = 'place-picker';
+  select.title = 'Where it goes in the day';
+  select.setAttribute('aria-label', `Where "${item.title}" goes in the day`);
+  select.append(new Option('At the end of the day', ''));
+  for (const r of routine) select.append(new Option(`After ${r.title}`, String(r.id)));
+  select.value = routine.some((r) => r.id === item.after_default) ? String(item.after_default) : '';
+  select.addEventListener('change', async () => {
+    await guarded(() => api.put(`${basePath(specialList)}/${item.id}`, {
+      after_default: select.value ? Number(select.value) : null,
+    }));
+    refresh(specialList);
+  });
+  return select;
 }
 
 function rowBtn(text, label, disabled, onClick) {
